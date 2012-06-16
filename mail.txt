@@ -1,0 +1,27 @@
+Hey {given_names} {surname},
+
+Thanks for applying for Pirate Party Australia membership. Unless there was an
+issue with your application, this email serves as confirmation that we have 
+received your application and acceptance as a Pirate Party Australia member.
+
+If there were any issues with any information in the application, we will
+contact you within the next few weeks.
+
+If you have any further enquiries, feel free to email us 
+(enquiries@pirateparty.org.au) or join us on our chat room 
+(http://pirateparty.org.au/irc).
+
+Welcome to Pirate Party Australia, thanks for joining, and we hope you enjoy
+your time with the party!
+
+--
+Regards,
+
+Brendan Molloy
+Secretary
+Pirate Party Australia
+
+M: +61 449 617 246
+W: http://www.pirateparty.org.au
+E: brendan.molloy@pirateparty.org.au
+T: @piecritic

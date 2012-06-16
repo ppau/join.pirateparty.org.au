@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Pirate Party Australia - Membership Application</title>
+		<link href="/favicon.ico" rel="shortcut icon">
+		<!--[if lt IE 9]>
+			<script src="html5shiv.js"></script>
+			<script src="flashcanvas.js"></script>
+		<![endif]-->
+		<script src="deps.js"></script>
+		<script src="handlebars.js"></script>
+		
+		<script id="receipt" type="text/x-handlebars-template">
+<div class="new-member">
+	<section>
+		<header>
+			<h1>Personal Details</h1>
+		</header>
+		<dl>
+			<dt>Given name(s)</dt>
+			<dd>{{details_of_applicant.given_names}}</dd>
+			
+			<dt>Surname</dt>
+			<dd>{{details_of_applicant.surname}}</dd>
+			
+			<dt>Date of Birth</dt>
+			<dd>{{details_of_applicant.date_of_birth}}</dd>
+
+			{{#if details_of_applicant.gender}}
+			<dt>Gender</dt>
+			<dd>{{details_of_applicant.gender}}</dd>
+			{{/if}}
+
+			<dt>Residental Address</dt>
+			<dd>
+				<p>{{details_of_applicant.residential_address.address}}</p>
+				<p>{{details_of_applicant.residential_address.suburb}} {{details_of_applicant.residential_address.state}} {{details_of_applicant.residential_address.postcode}}</p>
+			</dd>
+			
+			<dt>Postal Address</dt>
+			{{#if details_of_applicant.postal_address.address}}
+			<dd>
+				<p>{{details_of_applicant.postal_address.address}}</p>
+				<p>{{details_of_applicant.postal_address.suburb}} {{details_of_applicant.postal_address.state}} {{details_of_applicant.postal_address.postcode}}</p>
+			</dd>
+			{{else}}
+			<dd>As above</dd>
+			{{/if}}
+			
+			<dt>Email</dt>
+			<dd>{{details_of_applicant.email}}</dd>
+			
+			<dt>Primary Phone</dt>
+			<dd>{{details_of_applicant.primary_phone}}</dd>
+
+			{{#if detail_of_application.secondary_phone}}
+			<dt>Secondary Phone</dt>
+			<dd>{{details_of_applicant.secondary_phone}}</dd>
+			{{/if}}
+		</dl>
+	</section>
+	<section>
+		<header>
+			<h1>Declaration and Membership Requirements</h1>
+		</header>
+		<dl>
+			<dt>Agreed to declaration?</dt>
+			{{#if declaration_and_membership_requirements.understand_requirements}}
+			<dd>Yes</dd>
+			{{else}}
+			<dd>No</dd>
+			{{/if}}
+		</dl>
+	</section>
+	<section>
+		<header>
+			<h1>Other Details</h1>
+		</header>
+		<dl>
+			<dt>Opt out of state parties?</dt>
+			{{#if other_information.opt_out_state_parties_checked}}
+			<dd>Yes</dd>
+			{{else}}
+			<dd>No</dd>
+			{{/if}}
+
+			<dt>Member of another party in last 12 months?</dt>
+			{{#if other_information.another_party_checked}}
+			<dd>Yes, {{other_information.other_party_name}}</dd>
+			{{else}}
+			<dd>No</dd>
+			{{/if}}
+		</dl>
+	</section>
+	<section>
+		<header>
+			<h1>Payment and Submission</h1>
+		</header>
+		<dl>
+			<dt>Membership Type</dt>
+			<dd>{{payment_and_submission.membership_type}}</dd>
+
+			<dt>Signature</dt>
+			<dd><img src="{{payment_and_submission.signature}}" alt="signature"></dd>
+
+			<dt>Declared that all data is accurate?</dt>
+			{{#if payment_and_submission.is_declared}}
+			<dd>Yes</dd>
+			{{else}}
+			<dd>No</dd>
+			{{/if}}
+		</dl>
+	</section>
+</div>
+		</script>
+		<script>
+var receiptTemplate = Handlebars.compile($("#receipt").html());
+var streams, formState;
+
+$(function() {
+	/*
+	function toggle() {
+		$(".current").removeClass();
+		$(formState.stream[formState.currentPage]).addClass('current');
+		$(window).scrollTop($(".current").offset().top);
+		$("#prev, #next").show();
+		
+		if (formState.currentPage == 0) {
+			$("#prev").hide();
+		}
+		
+		if (formState.currentPage == formState.stream.length -1) {
+			$("#next").hide();
+		}
+	}
+	*/
+
+	streams = {
+		"update": $("form[name=why_are_you_here], form[name=details_of_applicant], form[name=submission]"),
+		"new": $("form")
+	};
+	
+	formState = {
+		stream: streams['new']
+	};
+
+	$("input[name=purpose]").click(function() {
+		$("form").removeClass("current");
+		formState.stream = streams[$(this).val()];
+		formState.stream.addClass("current");
+	});
+
+	/*
+	$("#next").click(function() {
+		formState.currentPage = Math.min(formState.currentPage + 1, formState.stream.length - 1);
+		toggle();
+	});
+	
+	$("#prev").click(function() {
+		formState.currentPage = Math.max(formState.currentPage - 1, 0);
+		toggle();
+	});
+	*/
+});
+
+var RecaptchaOptions = {theme: 'clean'};
+$("#recaptcha_response_field").live("keypress", function(e) { 
+	if((e.which || e.keyCode) == 13) { 
+		e.preventDefault();
+	} 
+});
+
+function generateReceipt(obj) {
+	$("#signup").children().not('header').remove();
+	$("#signup").append($("<form><h2>Thank you!</h2></form>"));
+	$("#signup").append($("<article><p>Your membership application will be processed in the next 72 hours. You will receive a notification by email when this process is complete. Thank for your applying for membership with Pirate Party Australia.</p><p>If you have any questions or do not receive notification within 72 hours, please email us at <a href='mailto:enquiries@pirateparty.org.au'>enquiries@pirateparty.org.au</a>.</p><p style='text-align: center'><a href='http://pirateparty.org.au'>Return to Homepage</a></p></article>"));
+	var div = $("<div style='text-align: center'></div>");
+	var button = $("<button type='button'>Print Receipt</button>");
+	button.click(function() { window.print(); });
+	div.append(button);
+	$("#signup").append(receiptTemplate(obj));
+	$("#signup").append(div);
+	window.scrollTo(0);
+}
+
+function submit(isTest) {
+	var forms = formState.stream, form, res,
+		i, ii, valid = true, obj, first;
+
+	for (i = 0, ii = forms.length; i < ii; ++i) {
+		if (!validate(forms[i])) {
+			valid = false;
+		}
+	}
+	
+	if (!valid) {
+		$('.invalid').first().focus();
+		alert("Validation failed. Please check for invalid or incomplete fields and try again.");
+	}
+
+	if (valid) {
+		obj = {};
+		obj['version'] = $('[name=version]').val();
+		forms.each(function() {
+			obj[this.getAttribute('name')] = getFormData(this);
+		});
+
+		if (isTest) {
+			console.log(obj);
+		} else {
+			var self = this;
+			$(this).attr("disabled", "disabled");
+			$(this).text("Submitting...");
+			$.ajax("/app/new_member", {
+				type: "POST",
+				data: {
+					form: JSON.stringify(obj)
+				}, 
+				success: function(data) {
+					if (data == "invalid captcha") {
+						alert("Invalid captcha. Please try again.");
+						$(self).removeAttr("disabled");
+						$(self).text("Submit");
+						return;
+					}
+					
+					if (data == "bot detected") {
+						alert("Go away, bot.");
+						return;
+					}
+
+					generateReceipt(data);
+				}, 
+				error: function(data) {
+					alert("An unknown error occurred.");
+					$(self).removeAttr("disabled");
+					$(self).text("Submit");
+				}
+			});
+		}
+		
+	}
+}
+
+function validate(form) {
+	var res = $(form).find("[required]"),
+		i, ii, node;
+	
+	$(form).find(".invalid").removeClass("invalid");
+	for (i = 0, ii = res.length; i < ii; ++i) {
+		node = $(res[i]);
+		if (node.hasClass('date') && !/^(0?[1-9]|[12][0-9]|3[01])\/(0?[1-9]|1[012])\/(19|20)\d\d$/.test(node.val())) {
+			node.addClass('invalid');
+			node.siblings('.invalid-msg').addClass('invalid');	
+		} else if ((node.attr('type') == "checkbox") ? !node[0].checked : node.val() == "") {
+			if (node.hasClass('output')) {
+				node.parent().find('canvas').addClass('invalid');
+				node.parent().parent().find('.invalid-msg').addClass('invalid');	
+			} else {
+				node.addClass('invalid');
+				node.parent().find('.invalid-msg').addClass('invalid');	
+			}
+		}
+	}
+	return $(form).find(".invalid").length == 0;
+}
+
+function getFormData(form) {
+	var obj = {}, i, ii, j, jj, parents, current,
+		inputs = $(form)[0].elements, input;
+	
+	for (i = 0, ii = inputs.length; i < ii; ++i) {
+		if (inputs[i].tagName.toLowerCase() == "section") {
+			continue;
+		}
+		
+		input = $(inputs[i]);
+		if (input.attr('name') == null || input.attr('name') == "") {
+			continue;
+		}
+		parents = input.parents('section').toArray().reverse();
+		current = obj;
+		
+		for (j = 0, jj = parents.length; j < jj; ++j) {
+			if (current[parents[j].getAttribute('name')] == null) {
+				current[parents[j].getAttribute('name')] = {};
+			}
+			current = current[parents[j].getAttribute('name')];
+		}
+		
+		if (input[0].getAttribute('type') == "checkbox") {
+			current[input[0].getAttribute('name')] = input[0].checked;
+		} else if (input.hasClass('output')) {
+			current['signature'] = input.parent().find('canvas')[0].toDataURL();
+		} else {
+			current[input[0].getAttribute('name')] = input.val();
+		}
+	}
+
+	return obj;
+}
+
+$(document).ready(function() {	
+	$("button").click(function(e) {
+		e.preventDefault();
+	});
+	$("button").submit(function(e) {
+		e.preventDefault();
+	});
+
+	$("#submit").click(function() {
+		submit.call(this, false);
+	});
+	
+	$("#signature").signaturePad({
+		drawOnly: true
+	});
+
+	$("input[required], select[required]").change(function() {
+		validate(this.parentNode);
+	});
+	
+	$("[id*=show\\:]").change(function() {
+		var id = $(this).attr('id').split(":")[1];
+		if (this.checked) {
+			$("#" + id).attr('style', '');
+		} else {
+			$("#" + id).attr('style', 'display: none');
+		}
+	});
+});
+		</script>
+		<link rel="stylesheet" href="webfonts.css" type="text/css" charset="utf-8" />
+		<style>
+			.pirate-text, h2 {
+				font-family: 'GehenSans';
+				font-weight: normal; 
+			}
+			
+			.pirate-bold {
+				font-family: 'GehenSansCondensed'; 
+				font-weight: bold; 
+				color: rgb(0, 96, 160);
+			}
+			
+			body {
+				background-color: #0083ae;
+			}
+			
+			.noscript {
+				padding: 16px;
+				background-color: white;
+			}
+
+			#signup form {
+				display: none;
+			}
+
+			#signup form.current {
+				display: block;
+			}
+
+			#signup input {
+				border: 1px solid gray;
+				box-shadow: #999 0px 0px 4px;
+				padding: 2px;
+			}
+			
+			#signup input:focus {
+				border-color: #0083ae;
+				box-shadow: none;
+			}
+
+			input.invalid, textarea.invalid, canvas.invalid {
+				border-color: red !important;
+			}
+
+			input.invalid, textarea.invalid, select.invalid {
+				background-color: pink;
+			}
+
+			#signature canvas {
+				cursor: crosshair;
+				border: 1px dashed gray;
+			}
+
+			#signup { 
+				background-color: white;
+				font-family: sans-serif;
+				max-width: 800px;
+				margin: 0 auto;
+				border: 1px solid gray;
+				border-radius: 6px;
+				-moz-border-radius: 6px;
+				-webkit-border-radius: 6px;
+				box-shadow: 4px 4px 50px #444444;
+				-moz-box-shadow: 4px 4px 50px #444444;
+				-webkit-box-shadow: 4px 4px 50px #444444;
+			}
+
+			#signup header {
+				background-color: #eee;
+				/*text-align: center;*/
+				padding: 16px;
+				position: relative;
+			}
+			
+			#signup form, #signup section {
+				margin-bottom: 19px;
+			}
+
+			#signup h1, #signup header h2 {
+				text-shadow: white 2px 2px 2px;
+				margin: 0;
+			}
+
+			#signup form h2 {
+				text-shadow: black 1px 1px 1px;
+				background-color: gray;
+				color: white;
+				padding: 6px;
+				margin-top: 0px;
+			}
+
+			#signup form h3 {
+				text-shadow: white 1px 1px 1px;
+				margin-left: 12px;
+				margin-right: 12px;
+			}
+
+			#signup label {
+				display: block;
+			}
+			
+			#signup article, #signup div, #signup label, #signup ul {
+				margin-left: 12px;
+				margin-right: 12px;
+				margin-top: 2px;
+				margin-bottom: 2px;
+			}
+
+			#signup label > span {
+				display: inline-block; zoom:1; *display: inline;
+				width: 190px;
+			}
+			
+			#signup .conditional label > span {
+				width: auto;
+			}
+
+			#signup .conditional small {
+				display: inline-block; zoom:1; *display: inline;
+				border: 1px solid #f66; 
+				background-color: #fdd;
+				padding: 0 2px;
+				vertical-align: bottom;
+			}
+
+			#signup .conditional {
+				padding: 2px;
+				background-color: #eee;
+				border: 1px solid gray;
+				border-radius: 2px;
+			}
+
+			#signup .conditional label {
+				margin: 2px;
+			}
+
+			#signup hr {
+				margin: 19px;
+				padding: 0;
+				height: 0;
+				width: 0;
+				border: none;
+			}
+
+			#signup .inline {
+				display: inline;
+				margin: 0;
+			}
+
+			#signup .required {
+				display: inline;
+				color: red;
+			}
+
+			#signup .invalid-msg {
+				display: none;
+				color: red;
+			}
+
+			#signup .invalid-msg.invalid {
+				display: inline !important;
+			}
+			
+			#signup input[type="checkbox"]+span, #signup input[type="checkbox"]+span * {
+				vertical-align: bottom;
+			}
+			
+			#signup .output {
+				display: none;
+			}
+
+			#recaptcha_area div {
+				margin: auto;
+			}
+
+			.recaptcha_image_cell {
+				background-color: transparent !important;
+			}
+
+			@media print {
+				body {
+					font-size: 10pt;
+				}
+
+				#signup h1, #signup h2, #signup h3 {
+					text-shadow: none;
+					background: none;
+					margin-bottom: 0;
+				}
+
+				#signup input {
+					box-shadow: none;
+				}
+
+				#signup {
+					box-shadow: none;
+				}
+
+				#signup .conditional {
+					border: none;
+					padding: default;
+				}
+
+				.new-member header {
+					padding: 0px !important;
+				}
+
+				form, article, button, #enrol, #submit-block, #postal-block {
+					display: none !important;
+				}
+			}
+
+			.new-member dl {
+				clear: both;
+				margin: 0;
+			}
+
+			.new-member dl dt {
+				font-weight: bold;
+				margin-top: 0.5em;
+			}
+
+			.new-member dl dd {
+				margin-left: 1em;
+				margin-bottom: 0.5em;
+			}
+
+			.new-member dl dd p {
+				margin: 0;
+			}
+
+			.privacy {
+				position: absolute;
+				top: 0;
+				right: 10px;
+				width: 200px;
+				font-size: 8pt;
+				color: gray;
+				text-align: right;
+			}
+
+			.privacy p {
+				text-align: justify;
+			}
+
+			.privacy a {
+				color: gray;
+				text-decoration: none;
+			}
+
+			.privacy a:hover {
+				border-bottom: 1px dotted;
+				color: black;
+			}
+
+			.home {
+				color: inherit;
+				text-decoration: none;
+			}
+
+			.home:hover {
+				text-decoration: underline;
+			}
+
+			#form-controls {
+				display: table;
+				padding-bottom: 10px;
+				width: 100%;
+				margin: 0;
+			}
+
+			#form-controls > * { 
+				display: table-cell;
+				width: 20%;
+			}
+
+			#form-controls button {
+				width: 100%;
+				height: 32px;
+			}
+
+			#info {
+				width: 40%;
+				border: 1px solid black;
+			}
+
+			ul {
+				list-style: none;
+				margin: 0;
+				padding-left: 2em;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="noscript">The web form requires JavaScript. Alternatively, <a href="http://pirateparty.org.au/media/documents/PPAU_Membership_Application.pdf">click here for the PDF form</a>.</div>
+		<script>$(".noscript").remove()</script>
+		<div id="signup" style="display: none">
+			<input type="hidden" name="version" value="20120617">
+			<header>
+				<span class='privacy'>
+					<p>
+						This information will only be used for the purposes of registering a political 
+						party with the Australian Electoral Commission.
+					</p>
+					<a href="http://pirateparty.org.au/privacy" target="_blank">Privacy Policy</a>
+				</span>
+				<a href="http://pirateparty.org.au" target="_blank"><img style="border: 1px solid gray; padding: 4px; background-color: white; vertical-align: middle" height="64" width="64" src="logo.png"></a>
+				<div class="pirate-text" style="display: inline-block; zoom:1; *display: inline; vertical-align: middle">
+					<a class="home" href="http://pirateparty.org.au" target="_blank">
+						<h1>
+							<span class="pirate-bold">pirate</span><span class="pirate-text">party</span>
+						</h1>
+					</a>
+					<h2>Membership Application</h2>
+				</div>
+			</header>
+			<form name="why_are_you_here" class="current">
+				<h2>Introduction</h2>
+				<article>
+					<p>Please select your reason for filling out this form:</p>
+				</article>
+				<ul class="conditional">
+					<li>
+						<label>
+							<input type="radio" name="purpose" value="new">
+							New membership
+						</label>
+					</li>
+					<li>
+						<label>
+							<input type="radio" name="purpose" value="update">
+							Updating my membership details
+						</label>
+					</li>
+				</ul>
+			</form>
+			<form name="details_of_applicant">
+				<h2>Details of Applicant</h2>
+				<article>
+					<p>Please enter your details exactly as they would appear on the electoral roll.</p>
+				</article>
+				<label>
+					<span>Given name(s) <span class="required">*</span></span>
+					<input name="given_names" required="required">
+					<span class="invalid-msg">Please enter a name.</span>
+				</label>
+				<label>
+					<span>Surname <span class="required">*</span></span>
+					<input name="surname" required="required">
+					<span class="invalid-msg">Please enter a last name.</span>
+				</label>
+				<label>
+					<span>Date of Birth <small>(dd/mm/yyyy)</small><span class="required">*</span></span>
+					<input name="date_of_birth" class="date" required="required">
+					<span class="invalid-msg">Please enter a valid date of birth.</span>
+				</label>
+				<label>
+					<span>Gender</span>
+					<input name="gender">
+				</label>
+				<section name="residential_address">
+					<h3>Residential Address</h3>
+					<article>
+						<p>Please enter the address that you are enrolled to vote from with the AEC.</p>
+					</article>
+					<label>
+						<span>Address <span class="required">*</span></span>
+						<input name="address" required="required">
+						<span class="invalid-msg">Please enter an address.</span>
+					</label>
+					<label>
+						<span>Suburb <span class="required">*</span></span>
+						<input name="suburb" required="required">
+						<span class="invalid-msg">Please enter a suburb.</span>
+					</label>
+					<label>
+						<span>State <span class="required">*</span></span>
+						<select name="state" required="required">
+							<option value=""></option>
+							<option value="ACT">ACT</option>
+							<option value="NSW">NSW</option>
+							<option value="NT">NT</option>
+							<option value="QLD">QLD</option>
+							<option value="SA">SA</option>
+							<option value="TAS">TAS</option>
+							<option value="VIC">VIC</option>
+							<option value="WA">WA</option>
+						</select>
+						<span class="invalid-msg">Please select a state.</span>
+					</label>
+					<label>
+						<span>Postcode <span class="required">*</span></span>
+						<input name="postcode" required="required">
+						<span class="invalid-msg">Please enter a postcode.</span>
+					</label>
+				</section>
+				<div id="postal-block" class="conditional">
+					<label>
+						<input type="checkbox" id="show:postal_address">
+						<span style="display: inline">My postal address <strong>differs</strong> from my residential address</span>
+					</label>
+				</div>
+				<section name="postal_address" id="postal_address" style="display: none">
+					<h3>Postal Address</h3>
+					<label>
+						<span>Address</span>
+						<input name="address">
+					</label>
+					<label>
+						<span>Suburb</span>
+						<input name="suburb">
+					</label>
+					<label>
+						<span>State</span>
+						<select name="state">
+							<option value=""></option>
+							<option value="ACT">ACT</option>
+							<option value="NSW">NSW</option>
+							<option value="NT">NT</option>
+							<option value="QLD">QLD</option>
+							<option value="SA">SA</option>
+							<option value="TAS">TAS</option>
+							<option value="VIC">VIC</option>
+							<option value="WA">WA</option>
+						</select>
+					</label>
+					<label>
+						<span>Postcode</span>
+						<input name="postcode">
+					</label>
+				</section>
+				<hr>
+				<label>
+					<span>Email <span class="required">*</span></span>
+					<input name="email" type="email" required="required">
+					<span class="invalid-msg">Please enter a valid email.</span>
+				</label>
+				<label>
+					<span>Primary phone <span class="required">*</span></span>
+					<input name="primary_phone" required="required">
+					<span class="invalid-msg">Please enter a phone number.</span>
+				</label>
+				<label>
+					<span>Secondary phone</span>
+					<input name="secondary_phone">
+				</label>
+			</form>
+			<form name="declaration_and_membership_requirements">
+				<h2>Declaration and Membership Requirements</h2>
+				<article>
+					<p>I wish to become a member of Pirate Party Australia. I have read and understand the <a target="_blank" href="http://pirateparty.org.au/constitution">Pirate Party Australia Constitution</a> and agree with its platform and principles, and will to the best of my ability work to uphold and promote them.</p>
+					<p>I am <strong>enrolled for Federal elections</strong>, i.e. I am 17 years of age or older. I am an Australian citizen (or a British citizen who was on the Australian Electoral roll on 25 of January 1984) and I have lived at the above address for at least one month.</p>
+					<p>I consent to this form being forwarded to the Australian Electoral Commission (AEC) in support of the party's application for registration as a political party.</p>
+					<p id="enrol" style="text-align: center"><a target="_blank" href="http://www.aec.gov.au/enrol">If you are not enrolled to vote, click here.</a></p>
+				</article>
+				<div class="conditional">
+					<label>
+						<input name="understand_requirements" type="checkbox" required="required">
+						<span style="display: inline">I confirm that I am enrolled to vote in federal elections and consent to my information being sent to the Australian Electoral Commission. <span class="required">*</span></span>
+						<span class="invalid-msg">Please check the box.</span>
+					</label>
+				</div>
+			</form>
+			
+			<form name="other_information">
+				<h2>Other Information</h2>
+				<article>
+					<p>Pirate Party Australia may in the future create state branches, and to ease in this process, we would like your consent to include your Pirate Party Australia membership for the registration of any of these branches.</p>
+					<p>This allows us to ensure that you are represented on both the Federal level, the State level and the Local level in elections.</p>
+				</article>
+				<div class="conditional">
+					<label>
+						<input id="show:sadface" name="opt_out_state_parties_checked" type="checkbox">
+						<span style="display: inline">I would like to <strong>opt-out</strong> of my membership being used for the purposes of registering state branches of Pirate Party Australia.</span> <small style="display: none" id="sadface">You have made the Secretary sad. :(</small>
+					</label>
+				</div>
+				<article>
+					<p>Pirate Party Australia does not allow membership of multiple Australian federal political parties. If you wish to sign up to Pirate Party Australia and are currently a member of another party, please resign from that party first before submitting your application.</p>
+				</article>
+				<div class="conditional">
+					<label style="display: inline-block; zoom:1; *display: inline;">
+						<input name="another_party_checked" id="show:other_party" type="checkbox">
+						<span style="display: inline">I <em>have been</em> a member of another party within the last <strong>12 months</strong>.</span>
+					</label>
+					<div class="inline" style="display: none" id="other_party">
+						<label>
+							<span style="display: inline">Which party?</span>
+							<input name="other_party_name">
+						</label>
+					</div>
+				</div>
+			</form>
+
+			<form name="payment">
+				<h2>Payment</h2>
+				<div style="display: none">
+					Screenreader users: please leave these two fields blank and unchecked.
+					<input type="text" name="should_be_blank_text">
+					<input type="checkbox" name="should_be_blank_checkbox">
+				</div>
+				<input type="hidden" name="membership_type" value="free">
+				<article>
+					<p>Membership will remain free until the party completes registration with the AEC. Pirate Party Australia is fully member funded. <a target="_blank" href="http://pirateparty.org.au/donate">If you wish to make a voluntary contribution, please click here</a>.</p>
+				</article>
+
+			</form>
+			<form name="submission" id="signature">
+				<h2>Submission</h2>
+				<div class="conditional">
+					<article>
+						<p>Please enter the two words into the text field below. <span class="required">*</span></p>
+					</article>
+					<script type="text/javascript" src="https://www.google.com/recaptcha/api/challenge?k=6Lcogc8SAAAAAEBtZeZLMbNNVdLjdc_V52T06lF0"></script>
+				</div>
+				<div class="conditional">
+					<label>
+						<input id="show:sig-block" name="is_declared" required="required" type="checkbox">
+						<span style="display: inline">I declare the information provided on this form to be true and complete. <span class="required">*</span></span>
+						<span class="invalid-msg">Please check the box.</span>
+					</label>
+				</div>
+				
+				<div id="sig-block" class="conditional" style="display: none; text-align: center">
+					<article>Please sign here. <span class="required">*</span>
+						<button class="clearButton">
+							Clear
+						</button>
+					</article>
+					<div class="sig sigWrapper">
+						<canvas class="pad" width="198" height="55"></canvas>
+						<input type="text" name="output" class="sigOutput output" required="required">
+					</div>
+					<span class="invalid-msg">Please draw a signature.</span>
+				</div>
+				<hr>
+
+				<div id="submit-block" class="conditional" style="text-align: center; background-color: #FFDDDD; border-color: #f66">
+					<div>Please ensure all the data you have entered is correct before hitting submit. It is a serious offence to make a false declaration.</div>
+					<button type="button" id="submit">Submit</button>
+				</div>
+			</form>
+		</div>
+		<script>$("#signup")[0].style.display = "";</script>
+		<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-31892189-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+	</body>
+</html>
