@@ -18,9 +18,10 @@ class MemberData(Entity):
 
 VALID_REF = "https://join.pirateparty.org.au"
 #VALID_REF = "http://localhost"
-VERSION = "20120520"
-MAIL_USER = "FILL ME"
-MAIL_PASS = "FILL ME"
+VERSION = "20120617"
+
+MAIL_USER = None
+MAIL_PASS = None
 
 mailer = Mailer("smtp.gmail.com", 
 	user=MAIL_USER,
@@ -28,7 +29,8 @@ mailer = Mailer("smtp.gmail.com",
 )
 print("Connecting to mailer...")
 mailer.connect()
-mail_template = open("mail.txt", 'r').read()
+mail_template_new = open("mail-new.txt", 'r').read()
+mail_template_update = open("mail-update.txt", 'r').read()
 print("Done!")
 
 
@@ -52,19 +54,39 @@ def get_time_now():
 def validate(obj):
 	# Check for correct version
 	if not obj.get('version') or obj['version'] != VERSION:
-		return "wrong version", None
+		return "wrong version", obj.get('version')
 
 	# Check for existence of relevant subforms
-	for k, v in {
-			"details_of_applicant": 9,
-			"declaration_and_membership_requirements": 1,
-			"other_information": 3,
-			"payment_and_submission": 7
-	}.items():
+	for k in (
+			"purpose",
+	):
+		if obj['why_are_you_here'].get(k) is None:
+			return "missing required field", k
+
+	purpose = obj['why_are_you_here']['purpose']
+	
+	required_fields = {
+		"why_are_you_here": 1,
+		"details_of_applicant": 9,
+		"declaration_and_membership_requirements": 1,
+		"other_information": 3,
+		"payment": 1,
+		"submission": 7
+	}
+	if purpose == "update":
+		for k in (
+				"declaration_and_membership_requirements", 
+				"other_information",
+				"payment"
+		):
+			del required_fields[k]
+	
+	for k, v in required_fields.items():
 		if obj.get(k) is None:
 			return "missing required field", k
 		if len(list(obj[k].keys())) != v:
 			return "unexpected fields", k
+	
 	
 	for k in (
 		"date_of_birth",
@@ -80,38 +102,44 @@ def validate(obj):
 		if obj['details_of_applicant'].get(k) is None:
 			return "missing required field", k
 		
-	for k in (
-		"understand_requirements",
-	):
-		if obj['declaration_and_membership_requirements'].get(k) is None:
-			return "missing required field", k
+	if purpose == "new":
+		for k in (
+			"understand_requirements",
+		):
+			if obj['declaration_and_membership_requirements'].get(k) is None:
+				return "missing required field", k
 
-	for k in (
-		"another_party_checked",
-		"opt_out_state_parties_checked",
-		"other_party_name"
-	):
-		if obj['other_information'].get(k) is None:
-			return "missing required field", k
+		for k in (
+			"another_party_checked",
+			"opt_out_state_parties_checked",
+			"other_party_name"
+		):
+			if obj['other_information'].get(k) is None:
+				return "missing required field", k
+	
+		for k in (
+			"membership_type",
+		):
+			if obj['payment'].get(k) is None:
+				return "missing required field", k
 	
 	for k in (
 		"is_declared",
-		"membership_type",
 		"recaptcha_challenge_field",
 		"recaptcha_response_field",
 		"should_be_blank_text",
 		"should_be_blank_checkbox",
 		"signature"
 	):
-		if obj['payment_and_submission'].get(k) is None:
+		if obj['submission'].get(k) is None:
 			return "missing required field", k
 	
 	return None, None
 
 
 def detect_bot(obj):
-	return obj['payment_and_submission']['should_be_blank_text'] != "" or \
-		obj['payment_and_submission']['should_be_blank_checkbox'] == True
+	return obj['submission']['should_be_blank_text'] != "" or \
+		obj['submission']['should_be_blank_checkbox'] == True
 
 
 def log(ip, msg):
@@ -129,17 +157,17 @@ def get_client_ip():
 
 
 app = app()
-"""
 @app.get('/')
 def main():
 	return open('index.html').read()
 
 @app.get('/<resource>')
 def resource(resource):
-	return open(resource).read()
-"""
+	try: return open(resource).read()
+	except: abort(404) 
 
 @app.post('/new_member')
+@app.post('/app/new_member')
 def post_new_member():
 	session.remove()
 
@@ -160,8 +188,8 @@ def post_new_member():
 		return log(ip, "bot detected")
 
 	response = captcha.submit(
-		form['payment_and_submission']['recaptcha_challenge_field'],
-		form['payment_and_submission']['recaptcha_response_field'],
+		form['submission']['recaptcha_challenge_field'],
+		form['submission']['recaptcha_response_field'],
 		'6Lcogc8SAAAAAP9yHm-a4M3J6Aqx_kiqZucP8qqE',
 		ip
 	)
@@ -175,24 +203,37 @@ def post_new_member():
 	given_names = form['details_of_applicant']['given_names']
 	surname = form['details_of_applicant']['surname']
 	email = form['details_of_applicant']['email']
+	state = form['details_of_applicant']['residential_address']['state']
 
-	MailThread(
-		"Brendan Molloy <secretary@pirateparty.org.au>",
-		"%s %s <%s>" % (given_names, surname, email),
-		"Membership Application Received",
-		mail_template.format(given_names=given_names, surname=surname)
-	).start()
+	template = None
+	if form['why_are_you_here']['purpose'] == "new":
+		template = mail_template_new
+		subject = "Membership Application Received"
+		log(ip, "New member: %s %s [%s] (%s)" % (
+			given_names, surname, email, state
+		))
+	elif form['why_are_you_here']['purpose'] == "update":
+		template = mail_template_update
+		subject = "Membership Details Update Received"
+		log(ip, "Updated member: %s %s [%s] (%s)" % (
+			given_names, surname, email, state
+		))
+	
+	if template is not None:
+		MailThread(
+			"Brendan Molloy <secretary@pirateparty.org.au>",
+			"%s %s <%s>" % (given_names, surname, email),
+			subject,
+			template.format(given_names=given_names, surname=surname)
+		).start()
 
-	log(ip, "New member: %s %s [%s]" % (
-		form['details_of_applicant']['given_names'],
-		form['details_of_applicant']['surname'],
-		form['details_of_applicant']['email']
-	))
 	return form
 
 
 if __name__ == "__main__":
+	import sys
 	setup_all()
-	create_all()
+	if len(sys.argv) > 1 and sys.argv[1] == "-n":
+		create_all()
 	run(app, server="cherrypy", host="127.0.0.1", port=10001)
 

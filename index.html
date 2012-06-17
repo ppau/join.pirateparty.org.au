@@ -60,6 +60,7 @@
 			{{/if}}
 		</dl>
 	</section>
+	{{#if declaration_and_membership_requirements}}
 	<section>
 		<header>
 			<h1>Declaration and Membership Requirements</h1>
@@ -73,6 +74,8 @@
 			{{/if}}
 		</dl>
 	</section>
+	{{/if}}
+	{{#if other_information}}
 	<section>
 		<header>
 			<h1>Other Details</h1>
@@ -93,19 +96,29 @@
 			{{/if}}
 		</dl>
 	</section>
+	{{/if}}
+	{{#if payment}}
 	<section>
 		<header>
-			<h1>Payment and Submission</h1>
+			<h1>Payment</h1>
 		</header>
 		<dl>
 			<dt>Membership Type</dt>
-			<dd>{{payment_and_submission.membership_type}}</dd>
+			<dd>{{payment.membership_type}}</dd>
 
+		</dl>
+	</section>
+	{{/if}}
+	<section>
+		<header>
+			<h1>Submission</h1>
+		</header>
+		<dl>
 			<dt>Signature</dt>
-			<dd><img src="{{payment_and_submission.signature}}" alt="signature"></dd>
+			<dd><img src="{{submission.signature}}" alt="signature"></dd>
 
 			<dt>Declared that all data is accurate?</dt>
-			{{#if payment_and_submission.is_declared}}
+			{{#if submission.is_declared}}
 			<dd>Yes</dd>
 			{{else}}
 			<dd>No</dd>
@@ -205,6 +218,7 @@ function submit(isTest) {
 		forms.each(function() {
 			obj[this.getAttribute('name')] = getFormData(this);
 		});
+		obj['submission']['date'] = new Date().toISOString();
 
 		if (isTest) {
 			console.log(obj);
@@ -227,6 +241,11 @@ function submit(isTest) {
 					
 					if (data == "bot detected") {
 						alert("Go away, bot.");
+						return;
+					}
+
+					if (typeof data === "string") {
+						alert("Unhandled error: " + data);
 						return;
 					}
 
@@ -827,11 +846,6 @@ $(document).ready(function() {
 
 			<form name="payment">
 				<h2>Payment</h2>
-				<div style="display: none">
-					Screenreader users: please leave these two fields blank and unchecked.
-					<input type="text" name="should_be_blank_text">
-					<input type="checkbox" name="should_be_blank_checkbox">
-				</div>
 				<input type="hidden" name="membership_type" value="free">
 				<article>
 					<p>Membership will remain free until the party completes registration with the AEC. Pirate Party Australia is fully member funded. <a target="_blank" href="http://pirateparty.org.au/donate">If you wish to make a voluntary contribution, please click here</a>.</p>
@@ -840,6 +854,11 @@ $(document).ready(function() {
 			</form>
 			<form name="submission" id="signature">
 				<h2>Submission</h2>
+				<div style="display: none">
+					Screenreader users: please leave these two fields blank and unchecked.
+					<input type="text" name="should_be_blank_text">
+					<input type="checkbox" name="should_be_blank_checkbox">
+				</div>
 				<div class="conditional">
 					<article>
 						<p>Please enter the two words into the text field below. <span class="required">*</span></p>
