@@ -157,6 +157,7 @@ def get_client_ip():
 
 
 app = app()
+"""
 @app.get('/')
 def main():
 	return open('index.html').read()
@@ -166,8 +167,9 @@ def resource(resource):
 	try: return open(resource).read()
 	except: abort(404) 
 
-@app.post('/new_member')
 @app.post('/app/new_member')
+"""
+@app.post('/new_member')
 def post_new_member():
 	session.remove()
 
