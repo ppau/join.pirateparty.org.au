@@ -7,7 +7,8 @@ import json
 import datetime
 import threading
 
-metadata.bind = "sqlite:///raw_member_data.db"
+config = json.load(open('config.json', 'r'))
+metadata.bind = config.get('db') or "sqlite:///raw_member_data.db"
 #metadata.bind.echo = True
 
 
@@ -16,12 +17,11 @@ class MemberData(Entity):
 	data = Field(UnicodeText)
 
 
-VALID_REF = "https://join.pirateparty.org.au"
-#VALID_REF = "http://localhost"
+VALID_REF = config.get('valid_ref') or "http://localhost"
 VERSION = "20120617"
 
-MAIL_USER = None
-MAIL_PASS = None
+MAIL_USER = config.get('mail_user')
+MAIL_PASS = config.get('mail_pass')
 
 mailer = Mailer("smtp.gmail.com", 
 	user=MAIL_USER,
