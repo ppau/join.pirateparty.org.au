@@ -18,7 +18,7 @@ class MemberData(Entity):
 
 
 VALID_REF = config.get('valid_ref') or "http://localhost"
-VERSION = "20120617"
+VERSION = "20120618"
 
 MAIL_USER = config.get('mail_user')
 MAIL_PASS = config.get('mail_pass')

@@ -310,6 +310,8 @@ function getFormData(form) {
 		
 		if (input[0].getAttribute('type') == "checkbox") {
 			current[input[0].getAttribute('name')] = input[0].checked;
+		} else if (input[0].getAttribute('type') == "radio") {
+			current[input[0].getAttribute('name')] = $("[name=" + input.attr('name') + "]:checked").val();
 		} else if (input.hasClass('output')) {
 			current['signature'] = input.parent().find('canvas')[0].toDataURL();
 		} else {
@@ -648,7 +650,7 @@ $(document).ready(function() {
 		<div class="noscript">The web form requires JavaScript. Alternatively, <a href="http://pirateparty.org.au/media/documents/PPAU_Membership_Application.pdf">click here for the PDF form</a>.</div>
 		<script>$(".noscript").remove()</script>
 		<div id="signup" style="display: none">
-			<input type="hidden" name="version" value="20120617">
+			<input type="hidden" name="version" value="20120618">
 			<header>
 				<span class='privacy'>
 					<p>
