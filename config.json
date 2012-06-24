@@ -1,0 +1,15 @@
+{
+	"host_ip"		 : "127.0.0.1",
+	"host_port"		 : 10001,
+	
+	"mongodb_server" : "127.0.0.1",
+	"mongodb_port"   : 27017,
+	
+	"valid_ref"      : "http://127.0.0.1:10001/index.html",
+
+	"mail_server"    : "smtp.gmail.com",
+	"mail_user"      : "<emailUserHere>@gmail.com",
+	"mail_pass"      : "<emailPasswordHere>",
+	
+	"ppau_secretary" : "Brendan Molloy <secretary@pirateparty.org.au>" 
+}
