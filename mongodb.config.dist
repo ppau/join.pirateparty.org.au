@@ -1,0 +1,25 @@
+# This is an example config file for MongoDB.
+# Ref: http://www.mongodb.org/display/DOCS/File+Based+Configuration
+#
+# Start mongo database by:
+#		$ /usr/bin/mongod --fork --config /this/directory/mongodb.config
+#
+# Stop mongo database by: 
+#    If not forked:
+#       ^C on console.
+#    If forked:
+#		$ /usr/bin/mongo
+#		> use admin
+#		> db.shutdownServer()
+#
+dbpath = /var/lib/mongodb
+bind_ip = 127.0.0.1
+port = 27017
+journal = true							# Journalled writes.
+noauth = true       					# Default anyway.
+logpath = /var/log/mongodb/mongodb.log  # The parent directory for the log file must already exist.
+logappend = true						# Append to existing log on restart
+
+#verbose = true 						# to disable, comment out.
+#v[vvvv] = true 						# Level of verbosity
+#cpu = true     						# Periodic logging of CPU usage

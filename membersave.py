@@ -10,6 +10,7 @@ from pymongo import Connection
 
 import json
 import datetime
+import time
 import threading
 
 print("Loading Configuration...")
@@ -37,6 +38,33 @@ mailer = Mailer(mail_server, user=mail_user, passwd=mail_pass)
 mailer.connect()
 print("Done!")
 
+
+MAX_AUTO_RECONNECT_ATTEMPTS = 5
+def mongo_safe_insert(collection, data):
+	'''
+	Insert member data into database and wait for commit.
+	Attempt auto-reconnect on failure.	
+	
+	1. Make sure you have 'journal=true' in mongodb.config file, 
+	   to be sure of durability of insert in single server setup.
+	2. safe=True makes us wait for the journalled DB to commit. 
+	   If it fails to commit other than connection issues, 
+	   		OperationFailure exception is detected and we return False immediately.
+	3. If it fails to commit due to connection issues, 
+			AutoReconnect exception is detected and we retry with exponential backoff.
+			Atter MAX_AUTO_RECONNECT_ATTEMPTS connect issues, give up and return False.
+ 	'''
+	for attempt in range(MAX_AUTO_RECONNECT_ATTEMPTS):
+		try:
+			collection.insert(data, safe=True)
+			return True
+		except pymongo.errors.OperationFailure:
+			return False
+		except pymongo.errors.AutoReconnect as e:
+			wait_t = 0.5 * pow(2, attempt) # exponential back off
+			log("server", "PyMongo auto-reconnecting... {}. Waiting {} seconds.".format(str(e), wait_t))
+			time.sleep(wait_t)
+	return False
 
 # Threaded email poster
 class MailThread(threading.Thread):
@@ -204,13 +232,15 @@ def post_new_member():
 	if not response.is_valid:
 		return log(ip, "invalid captcha")
 
-	# Insert member data into database.
-	# 		Make sure you have 'journal=true' in mongodb.config file, 
-	#		to be sure of durability of insert in single server setup. 
-	mongoMemberCollection.insert(form)
-	del form['_id']		# MongoDB puts it's own '_id' in the data as inserted
-						# It's doesn't serialize too well by default.
-						# We're not using it though, so get rid of it for now.	
+	# Make robust ttempt to insert member data into database.
+	if not mongo_safe_insert(mongoMemberCollection, form):
+		return log(ip, "database error")
+	
+	# MongoDB puts it's own '_id' in the data as inserted
+	# It's doesn't serialize too well by default.
+	# We're not using it though, so get rid of it for now.
+	# Laterm use json_util to sort this out.
+	del form['_id']			
 
 	# Kick off appropriate confirmation email
 	given_names = form['details_of_applicant']['given_names']
