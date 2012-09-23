@@ -186,15 +186,15 @@ def get_client_ip():
 
 app = app()
 
-#=== Enable for Bottle hosting of resoruces and HTML ====
+#=== Enable for Bottle hosting of resources and HTML ====
 '''
 @app.get('/')
 def main():
-	return open('index.html').read()
+	return open('../client/index.html').read()
 
 @app.get('/<resource>')
 def resource(resource):
-	try: return open(resource).read()
+	try: return open("../client/" + resource).read()
 	except: abort(404) 
 
 @app.post('/app/new_member')

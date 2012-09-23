@@ -181,6 +181,12 @@ $(function() {
 		toggle();
 	});
 	*/
+
+	if (location.hash == "#new") {
+		$("#new").click();
+	} else if (location.hash == "#update") {
+		$("#update").click();
+	}
 });
 
 var RecaptchaOptions = {theme: 'clean'};
@@ -687,13 +693,13 @@ $(document).ready(function() {
 				<ul class="conditional">
 					<li>
 						<label>
-							<input type="radio" name="purpose" value="new">
+							<input id="new" type="radio" name="purpose" value="new">
 							New membership
 						</label>
 					</li>
 					<li>
 						<label>
-							<input type="radio" name="purpose" value="update">
+							<input id="update" type="radio" name="purpose" value="update">
 							Updating my membership details
 						</label>
 					</li>
