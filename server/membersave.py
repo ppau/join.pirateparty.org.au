@@ -29,7 +29,7 @@ inform_secretary = config.get('inform_secretary') or False
 
 print("Connecting to database at {}:{}...".format(mongodb_server, mongodb_port))
 mongo_connection = Connection(mongodb_server, mongodb_port)
-mongo_member_collection = mongoConnection.ppau.members    # Database = "ppau". Collection = "members"
+mongo_member_collection = mongo_connection.ppau.members    # Database = "ppau". Collection = "members"
 
 print("Reading email templates...")
 mail_template_new = open("mail-new.txt", 'r').read()
@@ -250,8 +250,8 @@ def post_new_member():
     if not response.is_valid:
         return log(ip, "invalid captcha")
 
-	# Add UUID to new member
-	form['details_of_applicant']['uuid'] = uuid.uuid4().hex
+    # Add UUID to new member
+    form['details_of_applicant']['uuid'] = uuid.uuid4().hex
 
     # Make robust ttempt to insert member data into database.
     if not mongo_safe_insert(mongo_member_collection, form):
@@ -269,7 +269,7 @@ def post_new_member():
     email = form['details_of_applicant']['email']
     state = form['details_of_applicant']['residential_address']['state']
     
-	template = None
+    template = None
     if form[WHY_HERE]['purpose'] == "new":
         template = mail_template_new
         subject = "Membership Application Received"
@@ -292,13 +292,13 @@ def post_new_member():
             template.format(given_names=given_names, surname=surname)
         ).start()
 
-	if inform_secretary:
-		MailThread(
-			ppau_secretary,
-			ppau_secretary,
-			"%s %s" % (msg, ip),
-			form['details_of_applicant']['uuid']
-		).start()
+    if inform_secretary:
+        MailThread(
+            ppau_secretary,
+            ppau_secretary,
+            "%s %s" % (msg, ip),
+            form['details_of_applicant']['uuid']
+        ).start()
 
     return form
 
