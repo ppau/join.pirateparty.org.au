@@ -2,23 +2,6 @@ var receiptTemplate = Handlebars.compile($("#receipt").html());
 var streams, formState;
 
 $(function() {
-	/*
-	function toggle() {
-		$(".current").removeClass();
-		$(formState.stream[formState.currentPage]).addClass('current');
-		$(window).scrollTop($(".current").offset().top);
-		$("#prev, #next").show();
-		
-		if (formState.currentPage == 0) {
-			$("#prev").hide();
-		}
-		
-		if (formState.currentPage == formState.stream.length -1) {
-			$("#next").hide();
-		}
-	}
-	*/
-
 	streams = {
 		"update": $("form[name=why_are_you_here], form[name=details_of_applicant], form[name=submission]"),
 		"new": $("form")
@@ -34,21 +17,14 @@ $(function() {
 		formState.stream.addClass("current");
 	});
 
-	/*
-	$("#next").click(function() {
-		formState.currentPage = Math.min(formState.currentPage + 1, formState.stream.length - 1);
-		toggle();
-	});
-	
-	$("#prev").click(function() {
-		formState.currentPage = Math.max(formState.currentPage - 1, 0);
-		toggle();
-	});
-	*/
-
-	if (location.hash == "#new") {
+	var path = location.pathname.substr(1).split('/');
+	if (path.indexOf("new") > -1) {
 		$("#new").click();
-	} else if (location.hash == "#update") {
+	} else if (path.indexOf("update") > -1) {
+		var uuid = path[path.indexOf("update")];
+		if (uuid != null) {
+			window.memberUuid = uuid;
+		}
 		$("#update").click();
 	}
 });
@@ -95,6 +71,9 @@ function submit(isTest) {
 			obj[this.getAttribute('name')] = getFormData(this);
 		});
 		obj['submission']['date'] = new Date().toISOString();
+		if (window.memberUuid != null) {
+			obj['details_of_applicant']['uuid'] = window.memberUuid;
+		}
 
 		if (isTest) {
 			console.log(obj);

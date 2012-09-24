@@ -188,9 +188,18 @@ def get_client_ip():
 
 app = app()
 
+@app.get('/update/<uuid>')
+@app.get('/update')
+@app.get('/new')
+@app.get('/')
+def get_main(uuid=None):
+    return static_file("index.html", root="../client")
+
+
 @app.get('/resign/<uuid>')
 def get_resign_member(uuid):
     return static_file("resign.html", root="../client")    
+
 
 @app.post('/resign/<uuid>')
 def post_resign_member(uuid=None):
@@ -206,18 +215,15 @@ def post_resign_member(uuid=None):
     if not mongo_safe_insert(mongo_member_collection, o):
         log(ip, "database error")
         abort(500)
-
+	
+	log(ip, uuid + " has resigned.")
     return "You have been resigned. Thanks!"
 
-@app.get('/update')
-@app.get('/new')
-@app.get('/')
-def main():
-    return static_file("index.html", root="../client")
 
 @app.get('/<resource>')
 def resource(resource):
     return static_file(resource, root="../client")
+
 
 @app.post('/new_member')
 def post_new_member():
