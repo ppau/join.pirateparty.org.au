@@ -188,6 +188,27 @@ def get_client_ip():
 
 app = app()
 
+@app.get('/confirm/<uuid>')
+def get_confirm(uuid):
+    ip = get_client_ip()
+    
+    if uuid is None:
+        log(ip, "null uuid")
+        abort(404)
+    
+    o = {
+        "why_are_you_here": { "purpose": "confirm" },
+        "details_of_applicant": { "uuid": uuid }
+    }
+    
+    if not mongo_safe_insert(mongo_member_collection, o):
+        log(ip, "database error")
+        abort(500)
+    
+    log(ip, uuid + " has confirmed.")
+    return static_file("confirm.html", root="../client") 
+
+
 @app.get('/update/<uuid>')
 @app.get('/update')
 @app.get('/new')
