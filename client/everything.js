@@ -82,7 +82,7 @@ function submit(isTest) {
 			var self = this;
 			$(this).attr("disabled", "disabled");
 			$(this).text("Submitting...");
-			$.ajax("/app/new_member", {
+			$.ajax("/new_member", {
 				type: "POST",
 				data: {
 					form: JSON.stringify(obj)
