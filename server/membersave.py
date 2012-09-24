@@ -203,6 +203,8 @@ def get_resign_member(uuid):
 
 @app.post('/resign/<uuid>')
 def post_resign_member(uuid=None):
+    ip = get_client_ip()
+    
     if uuid is None:
         log(ip, "null uuid")
         abort(404)
