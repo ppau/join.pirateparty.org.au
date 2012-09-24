@@ -22,7 +22,7 @@ $(function() {
 	if (path.indexOf("new") > -1) {
 		$(function() { $("#new").click() });
 	} else if (path.indexOf("update") > -1) {
-		var uuid = path[path.indexOf("update")];
+		var uuid = path[path.indexOf("update")+1];
 		if (uuid != null) {
 			window.memberUuid = uuid;
 		}
