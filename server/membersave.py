@@ -215,8 +215,8 @@ def post_resign_member(uuid=None):
     if not mongo_safe_insert(mongo_member_collection, o):
         log(ip, "database error")
         abort(500)
-	
-	log(ip, uuid + " has resigned.")
+    
+    log(ip, uuid + " has resigned.")
     return "You have been resigned. Thanks!"
 
 
