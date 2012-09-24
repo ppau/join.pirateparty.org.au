@@ -18,14 +18,15 @@ $(function() {
 	});
 
 	var path = location.pathname.substr(1).split('/');
+	console.log(path);
 	if (path.indexOf("new") > -1) {
-		$("#new").click();
+		$(function() { $("#new").click() });
 	} else if (path.indexOf("update") > -1) {
 		var uuid = path[path.indexOf("update")];
 		if (uuid != null) {
 			window.memberUuid = uuid;
 		}
-		$("#update").click();
+		$(function() { $("#update").click() });
 	}
 });
 
