@@ -280,7 +280,8 @@ def post_new_member():
         return log(ip, "invalid captcha")
 
     # Add UUID to new member
-    form['details_of_applicant']['uuid'] = uuid.uuid4().hex
+    if form[WHY_HERE]['purpose'] == "new":	
+    	form['details_of_applicant']['uuid'] = uuid.uuid4().hex
 
     # Make robust ttempt to insert member data into database.
     if not mongo_safe_insert(mongo_member_collection, form):
