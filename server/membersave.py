@@ -157,8 +157,8 @@ def validate(form):
         subform = form.get(field) 
         if subform is None:
             return ERROR_MISSING, field
-        if len(subform.keys()) != len(subfields):
-            return ERROR_UNEXPECTED, field
+        #if len(subform.keys()) != len(subfields):
+        #    return ERROR_UNEXPECTED, field
     
         for subsubfield in subfields:
             if subform.get(subsubfield) is None:
