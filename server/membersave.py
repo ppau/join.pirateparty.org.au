@@ -280,8 +280,8 @@ def post_new_member():
         return log(ip, "invalid captcha")
 
     # Add UUID to new member
-    if form[WHY_HERE]['purpose'] == "new":	
-    	form['details_of_applicant']['uuid'] = uuid.uuid4().hex
+    if form[WHY_HERE]['purpose'] == "new":    
+        form['details_of_applicant']['uuid'] = uuid.uuid4().hex
 
     # Make robust ttempt to insert member data into database.
     if not mongo_safe_insert(mongo_member_collection, form):
@@ -321,6 +321,19 @@ def post_new_member():
             subject,
             template.format(given_names=given_names, surname=surname)
         ).start()
+
+        if form[WHY_HERE]['purpose'] == "update":
+            x = []
+            for k, v in form['details_of_applicant'].items():
+                x.append("%s: %s" % (k, v))
+            x = "\n".join(x)
+            
+            MailThread(
+                email,
+                "membership@support.pirateparty.org.au",
+                "Updated member: %s %s" % (given_names, surname),
+                x
+            ).start()
 
     if inform_secretary:
         MailThread(
