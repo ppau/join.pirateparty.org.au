@@ -340,7 +340,7 @@ def post_new_member():
             ppau_secretary,
             ppau_secretary,
             "%s %s" % (msg, ip),
-            form['details_of_applicant']['uuid']
+            form['details_of_applicant'].get('uuid', 'No UUID specified')
         ).start()
 
     return form
