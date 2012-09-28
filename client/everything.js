@@ -161,11 +161,13 @@ function getFormData(form) {
 		current = obj;
 		
 		for (j = 0, jj = parents.length; j < jj; ++j) {
+			console.log(parents[j].getAttribute('name'));
 			if (current[parents[j].getAttribute('name')] == null) {
 				current[parents[j].getAttribute('name')] = {};
 			}
 			current = current[parents[j].getAttribute('name')];
 		}
+
 		
 		if (input[0].getAttribute('type') == "checkbox") {
 			current[input[0].getAttribute('name')] = input[0].checked;
