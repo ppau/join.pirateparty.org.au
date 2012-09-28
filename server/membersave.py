@@ -96,7 +96,7 @@ UPDATE_FIELDS = {
         "email",
         "gender",
         "given_names",
-        "postal_address",
+#        "postal_address",
         "primary_phone",
         "secondary_phone",
         "residential_address",
