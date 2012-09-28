@@ -96,11 +96,15 @@ function submit(isTest) {
 					
 					if (data == "bot detected") {
 						alert("Go away, bot.");
+						$(self).removeAttr("disabled");
+						$(self).text("Submit");
 						return;
 					}
 
 					if (typeof data === "string") {
 						alert("Unhandled error: " + data);
+						$(self).removeAttr("disabled");
+						$(self).text("Submit");
 						return;
 					}
 
@@ -200,9 +204,9 @@ $(document).ready(function() {
 	$("[id*=show\\:]").change(function() {
 		var id = $(this).attr('id').split(":")[1];
 		if (this.checked) {
-			$("#" + id).attr('style', '');
+			$("#" + id).css('display', '');
 		} else {
-			$("#" + id).attr('style', 'display: none');
+			$("#" + id).css('display', 'none');
 		}
 	});
 });
