@@ -18,7 +18,7 @@
 		<script src="/handlebars.js"></script>
 		<script id="receipt" type="text/x-handlebars-template">
 <div class="new-member">
-	<section>
+	<div class='section'>
 		<header>
 			<h1>Personal Details</h1>
 		</header>
@@ -64,9 +64,9 @@
 			<dd>{{details_of_applicant.secondary_phone}}</dd>
 			{{/if}}
 		</dl>
-	</section>
+	</div>
 	{{#if declaration_and_membership_requirements}}
-	<section>
+	<div class='section'>
 		<header>
 			<h1>Declaration and Membership Requirements</h1>
 		</header>
@@ -78,10 +78,10 @@
 			<dd>No</dd>
 			{{/if}}
 		</dl>
-	</section>
+	</div>
 	{{/if}}
 	{{#if other_information}}
-	<section>
+	<div class='section'>
 		<header>
 			<h1>Other Details</h1>
 		</header>
@@ -100,10 +100,10 @@
 			<dd>No</dd>
 			{{/if}}
 		</dl>
-	</section>
+	</div>
 	{{/if}}
 	{{#if payment}}
-	<section>
+	<div class='section'>
 		<header>
 			<h1>Payment</h1>
 		</header>
@@ -112,9 +112,9 @@
 			<dd>{{payment.membership_type}}</dd>
 
 		</dl>
-	</section>
+	</div>
 	{{/if}}
-	<section>
+	<div class='section'>
 		<header>
 			<h1>Submission</h1>
 		</header>
@@ -129,7 +129,7 @@
 			<dd>No</dd>
 			{{/if}}
 		</dl>
-	</section>
+	</div>
 </div>
 		</script>
 		<script src="/everything.js"></script>
@@ -209,7 +209,7 @@
 				position: relative;
 			}
 			
-			#signup form, #signup section {
+			#signup form, #signup div.section {
 				margin-bottom: 19px;
 			}
 
@@ -236,7 +236,7 @@
 				display: block;
 			}
 			
-			#signup article, #signup div, #signup label, #signup ul {
+			#signup article, #signup div.div, #signup label, #signup ul {
 				margin-left: 12px;
 				margin-right: 12px;
 				margin-top: 2px;
@@ -433,7 +433,7 @@
 		</style>
 	</head>
 	<body>
-		<div class="noscript">The web form requires JavaScript. Alternatively, <a href="http://pirateparty.org.au/media/documents/PPAU_Membership_Application.pdf">click here for the PDF form</a>.</div>
+		<div class="div noscript">The web form requires JavaScript. Alternatively, <a href="http://pirateparty.org.au/media/documents/PPAU_Membership_Application.pdf">click here for the PDF form</a>.</div>
 		<script>$(".noscript").remove()</script>
 		<div id="signup" style="display: none">
 			<input type="hidden" name="version" value="20120924">
@@ -446,7 +446,7 @@
 					<a href="http://pirateparty.org.au/privacy" target="_blank">Privacy Policy</a>
 				</span>
 				<a href="http://pirateparty.org.au" target="_blank"><img style="border: 1px solid gray; padding: 4px; background-color: white; vertical-align: middle" height="64" width="64" src="/logo.png"></a>
-				<div class="pirate-text" style="display: inline-block; zoom:1; *display: inline; vertical-align: middle">
+				<div class="div pirate-text" style="display: inline-block; zoom:1; *display: inline; vertical-align: middle">
 					<a class="home" href="http://pirateparty.org.au" target="_blank">
 						<h1>
 							<span class="pirate-bold">pirate</span><span class="pirate-text">party</span>
@@ -499,7 +499,7 @@
 					<span>Gender</span>
 					<input name="gender">
 				</label>
-				<section name="residential_address">
+				<div class='section' name="residential_address">
 					<h3>Residential Address</h3>
 					<article>
 						<p>Please enter the address that you are enrolled to vote from with the AEC.</p>
@@ -534,14 +534,14 @@
 						<input name="postcode" required="required">
 						<span class="invalid-msg">Please enter a postcode.</span>
 					</label>
-				</section>
-				<div id="postal-block" class="conditional">
+				</div>
+				<div id="postal-block" class="div conditional">
 					<label>
 						<input type="checkbox" id="show:postal_address">
 						<span style="display: inline">My postal address <strong>differs</strong> from my residential address</span>
 					</label>
 				</div>
-				<section name="postal_address" id="postal_address" style="display: none">
+				<div class='section' name="postal_address" id="postal_address" style="display: none">
 					<h3>Postal Address</h3>
 					<label>
 						<span>Address</span>
@@ -569,7 +569,7 @@
 						<span>Postcode</span>
 						<input name="postcode">
 					</label>
-				</section>
+				</div>
 				<hr>
 				<label>
 					<span>Email <span class="required">*</span></span>
@@ -594,7 +594,7 @@
 					<p>I consent to this form being forwarded to the Australian Electoral Commission (AEC) in support of the party's application for registration as a political party.</p>
 					<p id="enrol" style="text-align: center"><a target="_blank" href="http://www.aec.gov.au/enrol">If you are not enrolled to vote, click here.</a></p>
 				</article>
-				<div class="conditional">
+				<div class="div conditional">
 					<label>
 						<input name="understand_requirements" type="checkbox" required="required">
 						<span style="display: inline">I confirm that I am enrolled to vote in federal elections and consent to my information being sent to the Australian Electoral Commission. <span class="required">*</span></span>
@@ -609,7 +609,7 @@
 					<p>Pirate Party Australia may in the future create state branches, and to ease in this process, we would like your consent to include your Pirate Party Australia membership for the registration of any of these branches.</p>
 					<p>This allows us to ensure that you are represented on the Federal level, the State level and the Local level in elections.</p>
 				</article>
-				<div class="conditional">
+				<div class="div conditional">
 					<label>
 						<input id="show:sadface" name="opt_out_state_parties_checked" type="checkbox">
 						<span style="display: inline">I would like to <strong>opt-out</strong> of my membership being used for the purposes of registering state branches of Pirate Party Australia.</span> <small style="display: none" id="sadface">You have made the Secretary sad. :(</small>
@@ -618,12 +618,12 @@
 				<article>
 					<p>Pirate Party Australia does not allow membership of multiple Australian federal political parties. If you wish to sign up to Pirate Party Australia and are currently a member of another party, please resign from that party first before submitting your application.</p>
 				</article>
-				<div class="conditional">
+				<div class="div conditional">
 					<label style="display: inline-block; zoom:1; *display: inline;">
 						<input name="another_party_checked" id="show:other_party" type="checkbox">
 						<span style="display: inline">I <em>have been</em> a member of another party within the last <strong>12 months</strong>.</span>
 					</label>
-					<div class="inline" style="display: none" id="other_party">
+					<div class="div inline" style="display: none" id="other_party">
 						<label>
 							<span style="display: inline">Which party?</span>
 							<input name="other_party_name">
@@ -642,18 +642,18 @@
 			</form>
 			<form name="submission" id="signature">
 				<h2>Submission</h2>
-				<div style="display: none">
+				<div class="div" style="display: none">
 					Screenreader users: please leave these two fields blank and unchecked.
 					<input type="text" name="should_be_blank_text">
 					<input type="checkbox" name="should_be_blank_checkbox">
 				</div>
-				<div class="conditional">
+				<div class="div conditional">
 					<article>
 						<p>Please enter the two words into the text field below. <span class="required">*</span></p>
 					</article>
 					<script type="text/javascript" src="https://www.google.com/recaptcha/api/challenge?k=6Lcogc8SAAAAAEBtZeZLMbNNVdLjdc_V52T06lF0"></script>
 				</div>
-				<div class="conditional">
+				<div class="div conditional">
 					<label>
 						<input id="show:sig-block" name="is_declared" required="required" type="checkbox">
 						<span style="display: inline">I declare the information provided on this form to be true and complete. <span class="required">*</span></span>
@@ -667,7 +667,7 @@
 							Clear
 						</button>
 					</article>
-					<div class="sig sigWrapper">
+					<div class="div sig sigWrapper">
 						<canvas class="pad" width="198" height="55"></canvas>
 						<input type="text" name="output" class="sigOutput output" required="required">
 					</div>
@@ -675,8 +675,8 @@
 				</div>
 				<hr>
 
-				<div id="submit-block" class="conditional" style="text-align: center; background-color: #FFDDDD; border-color: #f66">
-					<div>Please ensure all the data you have entered is correct before hitting submit. It is a serious offence to make a false declaration.</div>
+				<div id="submit-block" class="div conditional" style="text-align: center; background-color: #FFDDDD; border-color: #f66">
+					<div class="div">Please ensure all the data you have entered is correct before hitting submit. It is a serious offence to make a false declaration.</div>
 					<button type="button" id="submit">Submit</button>
 				</div>
 			</form>

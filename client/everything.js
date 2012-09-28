@@ -149,7 +149,7 @@ function getFormData(form) {
 		inputs = $(form)[0].elements, input;
 	
 	for (i = 0, ii = inputs.length; i < ii; ++i) {
-		if (inputs[i].tagName.toLowerCase() == "section") {
+		if ($(inputs[i]).hasClass('section')) {
 			continue;
 		}
 		
@@ -157,7 +157,7 @@ function getFormData(form) {
 		if (input.attr('name') == null || input.attr('name') == "") {
 			continue;
 		}
-		parents = input.parents('section').toArray().reverse();
+		parents = input.parents('.section').toArray().reverse();
 		current = obj;
 		
 		for (j = 0, jj = parents.length; j < jj; ++j) {
