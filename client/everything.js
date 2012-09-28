@@ -76,7 +76,7 @@ function submit(isTest) {
 		}
 
 		if (isTest) {
-			console.log(obj);
+			return obj;
 		} else {
 			var self = this;
 			$(this).attr("disabled", "disabled");
