@@ -3,13 +3,20 @@ var streams, formState;
 
 function mangleFormForAdminUpdate() {
     var why = $("form[name=why_are_you_here]");
-    why.empty().append($("<input readonly type='text' name='purpose' value='admin-update'>"))
-
+    why.empty().append($("<input type='hidden' name='purpose' value='admin-update'>"))
+    why.hide();
     var x = $("<form name='auth'>");
     x.attr('name', 'auth');
     x.append($("<h2>Authentication</h2>"));
-    x.append($("<input placeholder='username' name='username'><br><input placeholder='password' name='password' type='password'>"));
-    x.append($("<br><textarea style='width: 100%' name='comment' placeholder='Enter reason for update here.'></textarea>"));
+    var article = $("<article></article>");
+    x.append(article);
+    article.append($("<input placeholder='username' name='username'><br><input placeholder='password' name='password' type='password'>"));
+    var button = $("<button>Prefill</button>");
+    button.click(function() {
+        prefill();
+    });
+    article.append(button);
+    article.append($("<br><textarea style='width: 99%' name='comment' placeholder='Enter reason for update here.'></textarea><br>"));
     x.insertAfter(why);
 
 	var path = location.pathname.substr(1).split('/');
@@ -21,6 +28,32 @@ function mangleFormForAdminUpdate() {
     var submit = $("#submit-block").remove();
     var botkill = $("#botkill").remove()
     $("form[name=submission]").attr('id', '').empty().append(botkill).append(submit);
+}
+
+function prefill() {
+    function doit(data, node) {
+        for (var prop in data) {
+            if (typeof data[prop] == "string") {
+                node.find("[name="+prop+"]").val(data[prop]);
+            } else if (typeof data[prop] == "object" && data[prop] != null) {
+                doit(data[prop], node.find("[name="+prop+"]"));
+            }
+        }
+    }
+    
+    $.post("/member_prefill", {
+        username: $("[name=username]").val(),
+        password: $("[name=password]").val(),
+        uuid: window.memberUuid
+    }, function(data) {
+        if (typeof data == "string") {
+            alert(data);
+            return;
+        }
+
+       doit(data, $("body"))
+
+    });
 }
 
 $(function() {

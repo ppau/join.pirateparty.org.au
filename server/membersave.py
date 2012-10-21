@@ -34,6 +34,7 @@ print("Connecting to database at {}:{}...".format(mongodb_server, mongodb_port))
 mongo_connection = Connection(mongodb_server, mongodb_port)
 mongo_member_collection = mongo_connection.ppau.members    # Database = "ppau". Collection = "members"
 mongo_auth_collection = mongo_connection.ppau.authentication
+mongo_oldcsv_collection = mongo_connection.ppau.oldcsv
 
 print("Reading email templates...")
 mail_template_new = open("mail-new.txt", 'r').read()
@@ -51,7 +52,6 @@ def auth(data):
     return mongo_auth_collection.find_one({
         "username": user, "password": passwd
     })
-
 
 
 MAX_AUTO_RECONNECT_ATTEMPTS = 5
@@ -276,6 +276,40 @@ def post_resign_member(uuid=None):
 @app.get('/<resource>')
 def resource(resource):
     return static_file(resource, root="../client")
+
+
+@app.post("/member_prefill")
+def post_member_prefill():
+    ip = get_client_ip()
+
+    username = request.forms.get('username')
+    password = request.forms.get('password')
+    if auth({"username": username, "password": password}) is None:
+        return log(ip, "failed attempt to prefill")
+    uuid = request.forms.get("uuid")
+    if uuid is None:
+        return log(ip, "uuid is none")
+    record = None
+    try:
+        record = mongo_member_collection.find({
+            "details_of_applicant.uuid": uuid
+        }).sort("submission.date", -1)[0]
+    except Exception as e:
+        print(e)
+        pass
+    if record is not None:
+        del record['_id']
+        log(ip, "prefilled '%s' from members" % uuid)
+        return record['details_of_applicant']
+    
+    record = mongo_oldcsv_collection.find_one({
+        "details_of_applicant.uuid": uuid
+    })
+    if record is not None:
+        log(ip, "prefilled '%s' from oldcsv" % uuid)
+        return record['details_of_applicant']
+
+    return "no data found"
 
 
 @app.post('/new_member')
