@@ -2,8 +2,11 @@
 #    PPAU Member Server processing.
 #
 from bottle import abort, request, app, static_file, run
+import uuid
+
 from recaptcha.client import captcha
 from bbqutils.email import Mailer
+from hashlib import sha256
 
 import pymongo
 from pymongo import Connection
@@ -30,6 +33,7 @@ inform_secretary = config.get('inform_secretary') or False
 print("Connecting to database at {}:{}...".format(mongodb_server, mongodb_port))
 mongo_connection = Connection(mongodb_server, mongodb_port)
 mongo_member_collection = mongo_connection.ppau.members    # Database = "ppau". Collection = "members"
+mongo_auth_collection = mongo_connection.ppau.authentication
 
 print("Reading email templates...")
 mail_template_new = open("mail-new.txt", 'r').read()
@@ -39,6 +43,15 @@ print("Connecting to mailer at {}...".format(mail_server))
 mailer = Mailer(mail_server, user=mail_user, passwd=mail_pass)
 mailer.connect()
 print("Done!")
+
+
+def auth(data):
+    user = data['username']
+    passwd = sha256(data['password'].encode()).hexdigest()
+    return mongo_auth_collection.find_one({
+        "username": user, "password": passwd
+    })
+
 
 
 MAX_AUTO_RECONNECT_ATTEMPTS = 5
@@ -89,7 +102,7 @@ def get_time_now():
 WHY_HERE = "why_are_you_here"
 UPDATE_FIELDS = {
     WHY_HERE: [
-        "purpose", 
+        "purpose"
     ],
     "details_of_applicant": [
         "date_of_birth",
@@ -101,7 +114,21 @@ UPDATE_FIELDS = {
         "secondary_phone",
         "residential_address",
         "surname",
+    ]
+}
+
+ADMIN_UPDATE_FIELDS = {
+    "auth": [
+        "username",
+        "password"
     ],
+    "submission": [
+        "date",
+    ]
+}
+ADMIN_UPDATE_FIELDS.update(UPDATE_FIELDS)
+
+UPDATE_FIELDS.update({
     "submission": [
         "is_declared",
         "recaptcha_challenge_field",
@@ -111,8 +138,9 @@ UPDATE_FIELDS = {
         "signature",
         "date",
     ],
-}
-NEW_FIELDS = {            
+})
+
+NEW_FIELDS = {
     "declaration_and_membership_requirements": [
         "understand_requirements",
     ],
@@ -129,6 +157,7 @@ NEW_FIELDS.update(UPDATE_FIELDS)
 REQUIRED_FIELDS = {
     "new"    : NEW_FIELDS,
     "update" : UPDATE_FIELDS,
+    "admin-update": ADMIN_UPDATE_FIELDS
 }
 
 
@@ -209,6 +238,7 @@ def get_confirm(uuid):
     return static_file("confirm.html", root="../client") 
 
 
+@app.get('/admin/update/<uuid>')
 @app.get('/update/<uuid>')
 @app.get('/update')
 @app.get('/new')
@@ -259,7 +289,7 @@ def post_new_member():
         log(ip, "invalid referer: %s" % request.headers.get("Referer"))
         return "invalid referer"
 
-    # Extract and validate form    
+    # Extract and validate form
     form_string = request.forms.get('form')
     form = json.loads(form_string)
     invalid, item = validate(form)
@@ -269,18 +299,32 @@ def post_new_member():
     if detect_bot(form):
         return log(ip, "bot detected")
 
-    # Check it's a human
-    response = captcha.submit(
-        form['submission']['recaptcha_challenge_field'],
-        form['submission']['recaptcha_response_field'],
-        '6Lcogc8SAAAAAP9yHm-a4M3J6Aqx_kiqZucP8qqE',
-        ip
-    )
-    if not response.is_valid:
-        return log(ip, "invalid captcha")
+    if form[WHY_HERE]['purpose'] == "admin-update":
+        admin_user = auth(form['auth'])
+        if admin_user is None:
+            return log(ip, "failed attempt to log-in as admin")
+
+        if form['submission'].get('admin') is None:
+            form['submission']['admin'] = {}
+        form['submission']['admin']['name'] = admin_user['name']
+        form['submission']['admin']['email'] = admin_user['email']
+        form['submission']['admin']['comment'] = form['auth']['comment']
+        del form['auth']
+    else:
+        # Check it's a human
+        response = captcha.submit(
+            form['submission']['recaptcha_challenge_field'],
+            form['submission']['recaptcha_response_field'],
+            '6Lcogc8SAAAAAP9yHm-a4M3J6Aqx_kiqZucP8qqE',
+            ip
+        )
+        if not response.is_valid:
+            return log(ip, "invalid captcha")
+
+
 
     # Add UUID to new member
-    if form[WHY_HERE]['purpose'] == "new":    
+    if form[WHY_HERE]['purpose'] == "new":
         form['details_of_applicant']['uuid'] = uuid.uuid4().hex
 
     # Make robust ttempt to insert member data into database.
@@ -291,7 +335,7 @@ def post_new_member():
     # It's doesn't serialize too well by default.
     # We're not using it though, so get rid of it for now.
     # Laterm use json_util to sort this out.
-    del form['_id']            
+    del form['_id']
 
     # Kick off appropriate confirmation email
     given_names = form['details_of_applicant']['given_names']
@@ -310,6 +354,10 @@ def post_new_member():
         template = mail_template_update
         subject = "Membership Details Update Received"
         msg = log(ip, "Updated member: %s %s [%s] (%s)" % (
+            given_names, surname, email, state
+        ))
+    elif form[WHY_HERE]['purpose'] == 'admin-update':
+        msg = log(ip, "Admin updated member: %s %s [%s] (%s)" % (
             given_names, surname, email, state
         ))
     

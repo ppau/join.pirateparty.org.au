@@ -1,24 +1,51 @@
 var receiptTemplate = Handlebars.compile($("#receipt").html());
 var streams, formState;
 
+function mangleFormForAdminUpdate() {
+    var why = $("form[name=why_are_you_here]");
+    why.empty().append($("<input readonly type='text' name='purpose' value='admin-update'>"))
+
+    var x = $("<form name='auth'>");
+    x.attr('name', 'auth');
+    x.append($("<h2>Authentication</h2>"));
+    x.append($("<input placeholder='username' name='username'><br><input placeholder='password' name='password' type='password'>"));
+    x.append($("<br><textarea style='width: 100%' name='comment' placeholder='Enter reason for update here.'></textarea>"));
+    x.insertAfter(why);
+
+	var path = location.pathname.substr(1).split('/');
+    var uuid = path[path.indexOf("update")+1];
+    if (uuid != null) {
+		window.memberUuid = uuid;
+	}
+    
+    var submit = $("#submit-block").remove();
+    var botkill = $("#botkill").remove()
+    $("form[name=submission]").attr('id', '').empty().append(botkill).append(submit);
+}
+
 $(function() {
 	streams = {
-		"update": $("form[name=why_are_you_here], form[name=details_of_applicant], form[name=submission]"),
-		"new": $("form")
+		"update": "form[name=why_are_you_here], form[name=details_of_applicant], form[name=submission]",
+		"admin-update": "form[name=why_are_you_here], form[name=auth], form[name=details_of_applicant], form[name=submission]",
+		"new": "form"
 	};
 	
 	formState = {
-		stream: streams['new']
+		stream: $(streams['new'])
 	};
 
 	$("input[name=purpose]").click(function() {
 		$("form").removeClass("current");
-		formState.stream = streams[$(this).val()];
+		formState.stream = $(streams[$(this).val()]);
 		formState.stream.addClass("current");
 	});
 
 	var path = location.pathname.substr(1).split('/');
-	if (path.indexOf("new") > -1) {
+    if (path.indexOf("admin") > -1) {
+        mangleFormForAdminUpdate();
+        formState.stream = $(streams['admin-update']);
+        formState.stream.addClass('current');
+    } else if (path.indexOf("new") > -1) {
 		$(function() { $("#new").click() });
 	} else if (path.indexOf("update") > -1) {
 		var uuid = path[path.indexOf("update")+1];
