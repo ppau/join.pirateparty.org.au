@@ -273,6 +273,17 @@ def post_resign_member(uuid=None):
     return "You have been resigned. Thanks!"
 
 
+@app.get("/sha256")
+def get_sha256():
+    return """<form method="POST">
+        <input type='password' placeholder='password' name='password'>
+        <input type='submit'>
+    </form>"""
+
+@app.post("/sha256")
+def post_sha256():
+    return sha256(request.forms.get('password').encode()).hexdigest()
+
 @app.get('/<resource>')
 def resource(resource):
     return static_file(resource, root="../client")
