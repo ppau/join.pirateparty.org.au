@@ -135,7 +135,7 @@ UPDATE_FIELDS.update({
         "recaptcha_response_field",
         "should_be_blank_text",
         "should_be_blank_checkbox",
-        "signature",
+#        "signature",
         "date",
     ],
 })

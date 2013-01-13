@@ -179,11 +179,6 @@
 				background-color: pink;
 			}
 
-			#signature canvas {
-				cursor: crosshair;
-				border: 1px dashed gray;
-			}
-
 			#signup {
 				position: relative;
 				background-color: white;
@@ -638,7 +633,7 @@
 				</article>
 
 			</form>
-			<form name="submission" id="signature">
+			<form name="submission">
 				<h2>Submission</h2>
 				<div id='botkill' class="div" style="display: none">
 					Screenreader users: please leave these two fields blank and unchecked.
@@ -653,24 +648,12 @@
 				</div>
 				<div class="div conditional">
 					<label>
-						<input id="show:sig-block" name="is_declared" required="required" type="checkbox">
+						<input name="is_declared" required="required" type="checkbox">
 						<span style="display: inline">I declare the information provided on this form to be true and complete. <span class="required">*</span></span>
 						<span class="invalid-msg">Please check the box.</span>
 					</label>
 				</div>
 				
-				<div id="sig-block" class="div conditional" style="display: none; text-align: center">
-					<article>Please sign here. <span class="required">*</span>
-						<button class="clearButton">
-							Clear
-						</button>
-					</article>
-					<div class="div sig sigWrapper">
-						<canvas class="pad" width="198" height="55"></canvas>
-						<input type="text" name="output" class="sigOutput output" required="required">
-					</div>
-					<span class="invalid-msg">Please draw a signature.</span>
-				</div>
 				<hr>
 
 				<div id="submit-block" class="div conditional" style="text-align: center; background-color: #FFDDDD; border-color: #f66">
