@@ -219,24 +219,11 @@ app = app()
 
 @app.get('/confirm/<uuid>')
 def get_confirm(uuid):
-    ip = get_client_ip()
+    return """<html><body><p>If you're here, you were meant to click this link
+    many months ago, and the page no longer exists.</p>
     
-    if uuid is None:
-        log(ip, "null uuid")
-        abort(404)
-    
-    o = {
-        "why_are_you_here": { "purpose": "confirm" },
-        "details_of_applicant": { "uuid": uuid }
-    }
-    
-    if not mongo_safe_insert(mongo_member_collection, o):
-        log(ip, "database error")
-        abort(500)
-    
-    log(ip, uuid + " has confirmed.")
-    return static_file("confirm.html", root="../client") 
-
+    <p>Please email membership@pirateparty.org.au for further
+    assistance.</p></body></html>"""
 
 @app.get('/admin/update/<uuid>')
 @app.get('/update/<uuid>')
@@ -249,7 +236,7 @@ def get_main(uuid=None):
 
 @app.get('/resign/<uuid>')
 def get_resign_member(uuid):
-    return static_file("resign.html", root="../client")    
+    return static_file("resign.html", root="../client")
 
 
 @app.post('/resign/<uuid>')
@@ -260,15 +247,21 @@ def post_resign_member(uuid=None):
         log(ip, "null uuid")
         abort(404)
     
-    o = {
-        "why_are_you_here": { "purpose": "resign" },
-        "details_of_applicant": { "uuid": uuid }
-    }
+    if mongo_member_collection.find_one({"_id": uuid}) is None:
+        log(ip, "uuid not found")
+        abort(404)
     
-    if not mongo_safe_insert(mongo_member_collection, o):
-        log(ip, "database error")
-        abort(500)
-    
+    mongo_member_collection.update({"_id": uuid},
+        {"$set": {
+            "details.membership_level": "resigned"}
+        }, {"$push": {
+            "history": {
+                "action": "resign",
+                "ts": datetime.datetime.utcnow(),
+                "v": 1
+            }
+        }})
+
     log(ip, uuid + " has resigned.")
     return "You have been resigned. Thanks!"
 
@@ -280,52 +273,80 @@ def get_sha256():
         <input type='submit'>
     </form>"""
 
+
 @app.post("/sha256")
 def post_sha256():
     return sha256(request.forms.get('password').encode()).hexdigest()
+
 
 @app.get('/<resource>')
 def resource(resource):
     return static_file(resource, root="../client")
 
+def convert_new_record(record):
+    details = record['details_of_applicant']
+    id = details.get('uuid', None)
+    if id is not None:
+        id = uuid.UUID(id)
 
-@app.post("/member_prefill")
-def post_member_prefill():
-    ip = get_client_ip()
+    given_names = details['given_names']
+    surname = details['surname']
+    date_of_birth = datetime.datetime.strptime(details['date_of_birth'], "%d/%m/%Y")
+    gender = details.get('gender', None)
+    residential_address = details['residential_address']['address']
+    residential_suburb = details['residential_address']['suburb']
+    residential_state = details['residential_address']['state']
+    residential_postcode = details['residential_address']['postcode']
+    postal_address = details.get('postal_address', {}).get('address', None)
+    postal_suburb = details.get('postal_address', {}).get('suburb', None)
+    postal_state = details.get('postal_address', {}).get('state', None)
+    postal_postcode = details.get('postal_address', {}).get('postcode', None)
+    email = details['email']
+    primary_phone = details['primary_phone']
+    secondary_phone = details.get('secondary_phone', None)
+    membership_level = record.get('payment', {}).get('membership_type', "free")
+    opt_out_state_parties = record.get('other_information', {}).get('opt_out_state_parties_checked', None)
+    other_party_in_last_12_months = record.get('other_information', {}).get('other_party_name', None)
+    joined_on = datetime.datetime.strptime(record['submission']['date'], "%Y-%m-%dT%H:%M:%S.%fZ")
+    details = {
+        "given_names": given_names,
+        "surname": surname,
+        "date_of_birth": date_of_birth,
+        "gender": gender,
+        "residential_address": residential_address,
+        "residential_suburb": residential_suburb,
+        "residential_state": residential_state,
+        "residential_postcode": residential_postcode,
+        "postal_address": postal_address,
+        "postal_suburb": postal_suburb,
+        "postal_state": postal_state,
+        "postal_postcode": postal_postcode,
+        "email": email,
+        "primary_phone": primary_phone,
+        "secondary_phone": secondary_phone,
+        "membership_level": membership_level,
+        "opt_out_state_parties": opt_out_state_parties,
+        "other_party_in_last_12_months": other_party_in_last_12_months,
+        "joined_on": joined_on
+    }
 
-    username = request.forms.get('username')
-    password = request.forms.get('password')
-    if auth({"username": username, "password": password}) is None:
-        return log(ip, "failed attempt to prefill")
-    uuid = request.forms.get("uuid")
-    if uuid is None:
-        return log(ip, "uuid is none")
-    record = None
-    try:
-        record = mongo_member_collection.find({
-            "details_of_applicant.uuid": uuid
-        }).sort("submission.date", -1)[0]
-    except Exception as e:
-        print(e)
-        pass
-    if record is not None:
-        del record['_id']
-        log(ip, "prefilled '%s' from members" % uuid)
-        return record['details_of_applicant']
-    
-    record = mongo_oldcsv_collection.find_one({
-        "details_of_applicant.uuid": uuid
-    })
-    if record is not None:
-        log(ip, "prefilled '%s' from oldcsv" % uuid)
-        return record['details_of_applicant']
+    return {
+        "_id": id,
+        "details": details,
+        "v": 1
+    }
 
-    return "no data found"
 
+def create_history_for_details(details):
+    return [{
+        "action": "new",
+        "ts": datetime.datetime.utcnow(),
+        "details": details,
+        "v": 1
+    }]
 
 @app.post('/new_member')
 def post_new_member():
-    
     # Generally log IP address whenever anything funky is detected.
     ip = get_client_ip()
 
@@ -344,44 +365,38 @@ def post_new_member():
     if detect_bot(form):
         return log(ip, "bot detected")
 
-    if form[WHY_HERE]['purpose'] == "admin-update":
-        admin_user = auth(form['auth'])
-        if admin_user is None:
-            return log(ip, "failed attempt to log-in as admin")
-
-        if form['submission'].get('admin') is None:
-            form['submission']['admin'] = {}
-        form['submission']['admin']['name'] = admin_user['name']
-        form['submission']['admin']['email'] = admin_user['email']
-        form['submission']['admin']['comment'] = form['auth']['comment']
-        del form['auth']
-    else:
-        # Check it's a human
-        response = captcha.submit(
-            form['submission']['recaptcha_challenge_field'],
-            form['submission']['recaptcha_response_field'],
-            '6Lcogc8SAAAAAP9yHm-a4M3J6Aqx_kiqZucP8qqE',
-            ip
-        )
-        if not response.is_valid:
-            return log(ip, "invalid captcha")
-
-
+    # Check it's a human
+    response = captcha.submit(
+        form['submission']['recaptcha_challenge_field'],
+        form['submission']['recaptcha_response_field'],
+        '6Lcogc8SAAAAAP9yHm-a4M3J6Aqx_kiqZucP8qqE',
+        ip
+    )
+    if not response.is_valid:
+        return log(ip, "invalid captcha")
+    
+    # We won't support updating for a while
+    if form[WHY_HERE]['purpose'] != "new":
+        return "Updating temporarily disabled. Contact membership@pirateparty.org.au"
 
     # Add UUID to new member
     if form[WHY_HERE]['purpose'] == "new":
         form['details_of_applicant']['uuid'] = uuid.uuid4().hex
 
+    # LETS JUST PATCH SOME CRAP IN HERE
+    try:
+        record = convert_new_record(form)
+        record['history'] = create_history_for_details(record['details'])
+        record['payments'] = []
+    except Exception as e:
+        return log(ip, "couldn't convert record")
+        print(e)
+        return e
+
     # Make robust ttempt to insert member data into database.
-    if not mongo_safe_insert(mongo_member_collection, form):
+    if not mongo_safe_insert(mongo_member_collection, record):
         return log(ip, "database error")
     
-    # MongoDB puts it's own '_id' in the data as inserted
-    # It's doesn't serialize too well by default.
-    # We're not using it though, so get rid of it for now.
-    # Laterm use json_util to sort this out.
-    del form['_id']
-
     # Kick off appropriate confirmation email
     given_names = form['details_of_applicant']['given_names']
     surname = form['details_of_applicant']['surname']
@@ -399,10 +414,6 @@ def post_new_member():
         template = mail_template_update
         subject = "Membership Details Update Received"
         msg = log(ip, "Updated member: %s %s [%s] (%s)" % (
-            given_names, surname, email, state
-        ))
-    elif form[WHY_HERE]['purpose'] == 'admin-update':
-        msg = log(ip, "Admin updated member: %s %s [%s] (%s)" % (
             given_names, surname, email, state
         ))
     

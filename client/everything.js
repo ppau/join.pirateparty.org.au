@@ -183,23 +183,33 @@ function submit(isTest) {
 
 function validate(form) {
 	var res = $(form).find("[required]"),
-		i, ii, node;
+		i, ii, node, radios;
 	
 	$(form).find(".invalid").removeClass("invalid");
 	for (i = 0, ii = res.length; i < ii; ++i) {
 		node = $(res[i]);
+        node.parents('.conditional').removeClass('invalid');
+
 		if (node.hasClass('date') && !/^(0?[1-9]|[12][0-9]|3[01])\/(0?[1-9]|1[012])\/(19|20)\d\d$/.test(node.val())) {
 			node.addClass('invalid');
 			node.siblings('.invalid-msg').addClass('invalid');	
+            node.parents('.conditional').addClass('invalid');
 		} else if ((node.attr('type') == "checkbox") ? !node[0].checked : node.val() == "") {
-			if (node.hasClass('output')) {
-				node.parent().find('canvas').addClass('invalid');
-				node.parent().parent().find('.invalid-msg').addClass('invalid');	
-			} else {
-				node.addClass('invalid');
-				node.parent().find('.invalid-msg').addClass('invalid');	
-			}
-		}
+		    node.addClass('invalid');
+			node.parent().find('.invalid-msg').addClass('invalid');	
+            node.parents('.conditional').addClass('invalid');
+		} else if (node.attr('type') == 'radio' && node.attr('required')) {
+            radios = $("input[name='" + node.attr('name') + "']");
+            if (!radios.filter(":checked").length) {
+                radios.addClass("invalid");
+                $('.invalid-msg-' + node.attr('name')).addClass('invalid');
+                radios.parents('.conditional').addClass('invalid');
+            } else {
+                radios.removeClass("invalid");
+                $('.invalid-msg-' + node.attr('name')).removeClass('invalid');
+                radios.parents('.conditional').removeClass('invalid');
+            }
+        }
 	}
 	return $(form).find(".invalid").length == 0;
 }
@@ -231,8 +241,6 @@ function getFormData(form) {
 			current[input[0].getAttribute('name')] = input[0].checked;
 		} else if (input[0].getAttribute('type') == "radio") {
 			current[input[0].getAttribute('name')] = $("[name=" + input.attr('name') + "]:checked").val();
-		} else if (input.hasClass('output')) {
-			current['signature'] = input.parent().find('canvas')[0].toDataURL();
 		} else {
 			current[input[0].getAttribute('name')] = input.val();
 		}
@@ -253,10 +261,6 @@ $(document).ready(function() {
 		submit.call(this, false);
 	});
 	
-	$("#signature").signaturePad({
-		drawOnly: true
-	});
-
 	$("input[required], select[required]").change(function() {
 		validate(this.parentNode);
 	});

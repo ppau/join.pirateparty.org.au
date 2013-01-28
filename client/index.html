@@ -171,12 +171,17 @@
 				box-shadow: none;
 			}
 
-			input.invalid, textarea.invalid, canvas.invalid {
+      input.invalid,
+      textarea.invalid,
+      .conditional.invalid {
 				border-color: red !important;
 			}
 
-			input.invalid, textarea.invalid, select.invalid {
-				background-color: pink;
+      input.invalid, 
+      textarea.invalid, 
+      select.invalid,
+      .conditional.invalid {
+				background-color: #fdd !important;
 			}
 
 			#signup {
@@ -244,7 +249,7 @@
 				width: auto;
 			}
 
-			#signup .conditional small {
+			#sadface {
 				display: inline-block; zoom:1; *display: inline;
 				border: 1px solid #f66; 
 				background-color: #fdd;
@@ -294,10 +299,6 @@
 				vertical-align: bottom;
 			}
 			
-			#signup .output {
-				display: none;
-			}
-
 			#recaptcha_area div {
 				margin: auto;
 			}
@@ -423,7 +424,8 @@
 			a.home {
 				color: black;
 			}
-		</style>
+    </style>
+    <base target="_blank">
 	</head>
 	<body>
 		<div class="div noscript">The web form requires JavaScript. Alternatively, <a href="http://pirateparty.org.au/media/documents/PPAU_Membership_Application.pdf">click here for the PDF form</a>.</div>
@@ -433,14 +435,14 @@
 			<header>
 				<span class='privacy'>
 					<p>
-						This information will only be used for the purposes of registering a political 
+						This information will be used for the purposes of registering a political 
 						party with the Australian Electoral Commission.
 					</p>
-					<a href="http://pirateparty.org.au/privacy" target="_blank">Privacy Policy</a>
+					<a href="http://pirateparty.org.au/privacy">Privacy Policy</a>
 				</span>
-				<a href="http://pirateparty.org.au" target="_blank"><img style="border: 1px solid gray; padding: 4px; background-color: white; vertical-align: middle" height="64" width="64" src="/logo.png"></a>
+				<a href="http://pirateparty.org.au"><img style="border: 1px solid gray; padding: 4px; background-color: white; vertical-align: middle" height="64" width="64" src="/logo.png"></a>
 				<div class="div pirate-text" style="display: inline-block; zoom:1; *display: inline; vertical-align: middle">
-					<a class="home" href="http://pirateparty.org.au" target="_blank">
+					<a class="home" href="http://pirateparty.org.au">
 						<h1>
 							<span class="pirate-bold">pirate</span><span class="pirate-text">party</span>
 						</h1>
@@ -457,13 +459,13 @@
 					<li>
 						<label>
 							<input id="new" type="radio" name="purpose" value="new">
-							New membership
+              New membership
 						</label>
 					</li>
 					<li>
-						<label>
-							<input id="update" type="radio" name="purpose" value="update">
-							Updating my membership details
+						<label style="color: #bbb">
+							<input id="update" type="radio" name="purpose" value="update" disabled>
+							Updating my membership details (temporarily disabled)
 						</label>
 					</li>
 				</ul>
@@ -582,10 +584,10 @@
 			<form name="declaration_and_membership_requirements">
 				<h2>Declaration and Membership Requirements</h2>
 				<article>
-					<p>I wish to become a member of Pirate Party Australia. I have read and understand the <a target="_blank" href="http://pirateparty.org.au/constitution">Pirate Party Australia Constitution</a> and agree with its platform and principles, and will to the best of my ability work to uphold and promote them.</p>
+					<p>I wish to become a member of Pirate Party Australia. I have read and understand the <a href="http://pirateparty.org.au/constitution">Pirate Party Australia Constitution</a> and agree with its platform and principles, and will to the best of my ability work to uphold and promote them.</p>
 					<p>I am <strong>enrolled for Federal elections</strong>, i.e. I am 16 years of age or older. I am an Australian citizen (or a British citizen who was on the Australian Electoral roll on 25 of January 1984) and I have lived at the above address for at least one month.</p>
 					<p>I consent to this form being forwarded to the Australian Electoral Commission (AEC) in support of the party's application for registration as a political party.</p>
-					<p id="enrol" style="text-align: center"><a target="_blank" href="http://www.aec.gov.au/enrol">If you are not enrolled to vote, click here.</a></p>
+					<p id="enrol" style="text-align: center"><a href="http://www.aec.gov.au/enrol">If you are not enrolled to vote, click here.</a></p>
 				</article>
 				<div class="div conditional">
 					<label>
@@ -627,9 +629,71 @@
 
 			<form name="payment">
 				<h2>Payment</h2>
-				<input type="hidden" name="membership_type" value="free">
-				<article>
-					<p>Membership will remain free until the party completes registration with the AEC. Pirate Party Australia is fully member funded. <a target="_blank" href="http://pirateparty.org.au/donate">If you wish to make a voluntary contribution, please click here</a>.</p>
+				<input type="hidden" name="membership_type" value="full">
+        <article>
+          <p><strong>Full Membership</strong> of Pirate Party Australia is currently <strong>$20</strong>. The entitlements of Full Membership can be found in Article 3.1.2 of the <a href="http://pirateparty.org.au/constitution">Party Constitution</a>.</p> 
+
+          <p><em>Due to the recent party registration, we are experiencing a
+              higher than normal load and will contact you soon regarding
+              payment options. Apologies for any inconvenience caused. Your
+              membership will be immediately active.</em></p>
+          <!--<p>You have <strong>30 days</strong> from the date of this application to pay by any of the methods listed below. If you have any difficulty with payment, please contact <a href="mailto:enquiries@pirateparty.org.au">enquiries@pirateparty.org.au</a>.</p>-->
+          
+          <!--
+          <h3>Payment Options</h3>
+          <p style='padding-left: 1em'>Please select a method of payment below: <span class='required'>*</span></p>
+					<p style='padding-left: 1em; margin-bottom: 1em;' class="invalid-msg invalid-msg-payment_method">Please select a payment method.</p>
+          <ul>
+            <li style="margin-bottom: 1em;">
+              <div class="conditional">
+                <label>
+                  <input required='required' name="payment_method" type="radio" value="direct_deposit">
+                  <strong>Direct Deposit <small>(preferred)</small></strong>
+                </label>
+              </div>
+              <!
+              <p>
+                Account Name: Pirate Party Australia Incorporated<br>
+                BSB: 633-000<br>
+                Account Number: 138 718 051<br>
+                Reference: <em>Primary Contact Number (as per your registration form)</em>
+              </p>
+              >
+            </li>
+            <li style="margin-bottom: 1em;">
+              <div class="conditional">
+                <label>
+                  <input required='required' name="payment_method" type="radio" value="cheque">
+                  <strong>Cheque</strong>
+                </label>
+              </div>
+              <!
+              <p>Make the cheque out to <strong>Pirate Party Australia</strong> and mail it to:</p>
+              <p style="background-color: #fdfdfd; padding: 0.5em; margin-right: 1em; border: 1px solid #e5e5e5">
+                Pirate Party Australia<br>
+                PO Box Q1715<br>
+                Queen Victoria Building NSW 1230
+              </p>
+              <p>Reference: <em>Primary Contact Number (as per your registration form)</em></p>
+              >
+            </li>
+            <li style="margin-bottom: 1em;">
+              <div class="conditional">
+                <label>
+                  <input required='required' name="payment_method" type="radio" value="paypal">
+                  <strong>PayPal</strong>
+                </label>
+              </div>
+              <!
+              <p>(coming soon)</p>
+              >
+            </li>
+            
+
+
+          </ul>
+          -->
+          <p>Pirate Party Australia is fully member funded. <a target="_blank" href="http://pirateparty.org.au/donate">If you wish to make a donation, please click here</a>.</p>
 				</article>
 
 			</form>
@@ -644,7 +708,8 @@
 					<article>
 						<p>Please enter the two words into the text field below. <span class="required">*</span></p>
 					</article>
-					<script type="text/javascript" src="https://www.google.com/recaptcha/api/challenge?k=6Lcogc8SAAAAAEBtZeZLMbNNVdLjdc_V52T06lF0"></script>
+          <script type="text/javascript" src="https://www.google.com/recaptcha/api/challenge?k=6Lcogc8SAAAAAEBtZeZLMbNNVdLjdc_V52T06lF0"></script>
+          <script>$("#recaptcha_response_field").attr('required', 'required');</script>
 				</div>
 				<div class="div conditional">
 					<label>
@@ -662,7 +727,7 @@
 				</div>
 			</form>
 		</div>
-		<script>$("#signup")[0].style.display = "";</script>
+    <script>$("#signup")[0].style.display = "";$(function(){$("#new").click()})</script>
 		<script type="text/javascript">
 
   var _gaq = _gaq || [];
