@@ -239,7 +239,7 @@ def get_resign_member(uuid):
     return static_file("resign.html", root="../client")
 
 
-@app.post('/resign/<uuid>')
+@app.post('/resign/<uuid_>')
 def post_resign_member(uuid_=None):
     ip = get_client_ip()
     
