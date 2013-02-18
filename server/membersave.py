@@ -240,18 +240,25 @@ def get_resign_member(uuid):
 
 
 @app.post('/resign/<uuid>')
-def post_resign_member(uuid=None):
+def post_resign_member(uuid_=None):
     ip = get_client_ip()
     
-    if uuid is None:
+    if uuid_ is None:
         log(ip, "null uuid")
         abort(404)
     
-    if mongo_member_collection.find_one({"_id": uuid}) is None:
+    try:
+        uuid_ = uuid.UUID(uuid_)
+    except:
+        log(ip, "invalid uuid")
+        abort(404)
+
+    record = mongo_member_collection.find_one({"_id": uuid_})
+    if record is None:
         log(ip, "uuid not found")
         abort(404)
     
-    mongo_member_collection.update({"_id": uuid},
+    mongo_member_collection.update({"_id": uuid_},
         {"$set": {
             "details.membership_level": "resigned"}
         }, {"$push": {
@@ -262,7 +269,7 @@ def post_resign_member(uuid=None):
             }
         }})
 
-    log(ip, uuid + " has resigned.")
+    log(ip, "%s %s (%s) has resigned." % (record['details']['given_names'], record['details']['surname'], uuid_.hex))
     return "You have been resigned. Thanks!"
 
 
